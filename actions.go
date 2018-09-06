@@ -6,7 +6,6 @@ import (
 	"bitbucket/stats"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/urfave/cli"
@@ -129,7 +128,7 @@ func checkUserBeforeAction(c *cli.Context) error {
 		return errURL
 	}
 	splitUsername := strings.Split(c.String("user"), ":")
-	url := c.String("url")
+	url := strings.Trim(c.String("url"), " \n")
 	if len(splitUsername) != 2 {
 		return errors.New("Inputted username, credentials was not in the proper format. Should be <username>:<password> was " + c.String("user"))
 	} else if url == "" {
@@ -143,16 +142,18 @@ func checkUserBeforeAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Good News, User exists")
+	fmt.Println("pre-run actions complete")
+	return nil
+}
+
+func afterCommandAction(c *cli.Context) error {
+	fmt.Println("shutting down")
 	return nil
 }
 
 func onUsageError(c *cli.Context, err error, isSubcommand bool) error {
 	if isSubcommand {
 		return err
-	}
-	if err == errUser {
-		log.Panic(err)
 	}
 	return nil
 }

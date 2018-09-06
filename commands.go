@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/urfave/cli"
 )
 
@@ -26,10 +24,7 @@ var statsCommand = cli.Command{
 	},
 	Action: statsAllAction,
 	Before: beforeStatsAction,
-	After: func(c *cli.Context) error {
-		fmt.Println("Finished getting stats Data")
-		return nil
-	},
+	After:  afterCommandAction,
 	Subcommands: []cli.Command{
 		{
 			Name:        "all",
@@ -86,12 +81,9 @@ var updateCommand = cli.Command{
 		userFlag,
 		urlFLag,
 	},
-	Action: updateAction,
-	Before: checkUserBeforeAction,
-	After: func(c *cli.Context) error {
-		fmt.Println("Finished syncing/updating data")
-		return nil
-	},
+	Action:       updateAction,
+	Before:       checkUserBeforeAction,
+	After:        afterCommandAction,
 	OnUsageError: onUsageError,
 }
 

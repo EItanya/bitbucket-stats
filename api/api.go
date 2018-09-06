@@ -32,15 +32,15 @@ func (api *API) doExt(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	switch resp.StatusCode {
-	case 200:
+	switch {
+	case resp.StatusCode == 200:
 		return resp, nil
-	case 400:
-		return resp, errBadRequest
-	case 401:
-		return resp, errAuthorization
-	case 404:
-		return resp, errNotFound
+	case resp.StatusCode == 400:
+		return resp, authErrors(resp)
+	case resp.StatusCode >= 401 && resp.StatusCode <= 499:
+		return resp, authErrors(resp)
+	case resp.StatusCode >= 500:
+		return resp, errors.New("500 error, I don't even know how you managed that")
 	default:
 		return resp, err
 	}

@@ -19,7 +19,7 @@ func main() {
 	app.OnUsageError = onUsageError
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 
 	// fmt.Println(time.Since(start))
