@@ -1,5 +1,9 @@
 package models
 
+import (
+	"fmt"
+)
+
 // --------------------------------------
 //
 //  Bitbucket API project types
@@ -14,6 +18,28 @@ type Project struct {
 	Description string `json:"description"`
 	Public      bool   `json:"public"`
 	Type        string `json:"type"`
+}
+
+func (p *Project) Unmarshal(dat interface{}) error {
+	if cast, ok := dat.(*interface{}); ok {
+		*cast = *p
+		return nil
+	}
+	if cast, ok := dat.(*Project); ok {
+		*cast = *p
+		return nil
+	}
+	return fmt.Errorf("Improper type (%s) was passed into unmarshal method for Project model", dat)
+}
+
+func (p *Project) Marshal(dat interface{}) error {
+	switch typedData := dat.(type) {
+	case Project:
+		p = &typedData
+	default:
+		return fmt.Errorf("Improper type (%s) was passed into marshal method for Project model", dat)
+	}
+	return nil
 }
 
 // FilterProjects method to filter saved projects

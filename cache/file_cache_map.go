@@ -105,3 +105,13 @@ func (t *fileCacheMap) set(key fileCacheKey, dataToSave interface{}) error {
 	t.dataMtx.Unlock()
 	return nil
 }
+
+func (t *fileCacheMap) keys() []string {
+	keys := make([]string, 0)
+	if t.data != nil {
+		for key := range t.data {
+			keys = append(keys, fmt.Sprintf("%s:%s", key.Location, key.Key))
+		}
+	}
+	return keys
+}

@@ -47,10 +47,8 @@ func (client *Client) GetRepos(repos []string) (*[]models.Repository, error) {
 		}
 
 		for _, v := range reposJSON {
-			re := &cache.RedisEntity{}
-			err = cache.MarshalEntity(re, v)
 			key := fmt.Sprintf("repository:%s", v.Slug)
-			err = cache.SaveToCache(client.cache, key, re)
+			err = cache.SaveToCache(client.cache, key, &v)
 			if err != nil {
 				return nil, err
 			}

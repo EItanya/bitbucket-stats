@@ -3,7 +3,6 @@ package api
 import (
 	"bitbucket/models"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -53,7 +52,6 @@ func (r *RepoResponse) UnmarshalHTTP(resp *http.Response) error {
 		return err
 	}
 	err = json.Unmarshal(byt, r)
-	fmt.Println(r)
 	return err
 }
 
@@ -70,7 +68,6 @@ func (f *FileResponse) UnmarshalHTTP(resp *http.Response) error {
 		return err
 	}
 	err = json.Unmarshal(byt, f)
-	fmt.Println(f)
 	return err
 }
 
@@ -84,4 +81,21 @@ type ErrorValue struct {
 	Context       interface{} `json:"context"`
 	Message       string      `json:"message"`
 	ExceptionName interface{} `json:"exceptionName"`
+}
+
+// Entity interface for json http response
+type Entity interface {
+	UnmarshalHTTP(*http.Response) error
+}
+
+func GetEntity(r *http.Response, v Entity) error {
+	return v.UnmarshalHTTP(r)
+}
+
+func readEntityFromResp(resp *http.Response, dat Entity) error {
+	byt, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(byt, &dat)
 }

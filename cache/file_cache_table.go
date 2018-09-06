@@ -10,6 +10,7 @@ import (
 type fileCacheTable interface {
 	get(key fileCacheKey) (interface{}, error)
 	set(key fileCacheKey, dat interface{}) error
+	keys() []string
 }
 
 func fileCacheGet(t fileCacheTable, key fileCacheKey) (interface{}, error) {

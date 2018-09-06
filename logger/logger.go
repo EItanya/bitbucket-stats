@@ -1,15 +1,13 @@
 package logger
 
 import (
-	"encoding/json"
-
 	"go.uber.org/zap"
 )
 
 var rawJSON = []byte(`{
   "level": "debug",
   "development": true,
-  "encoding": "json",
+  "encoding": "console",
   "outputPaths": ["logs/debug.log"],
   "errorOutputPaths": ["stderr"],
   "encoderConfig": {
@@ -24,10 +22,9 @@ var Log *zap.SugaredLogger
 
 func init() {
 
-	var cfg zap.Config
-	if err := json.Unmarshal(rawJSON, &cfg); err != nil {
-		panic(err)
-	}
+	cfg := zap.NewDevelopmentConfig()
+	cfg.Encoding = "console"
+	cfg.OutputPaths = []string{"logs/debug.log"}
 	logger, err := cfg.Build()
 	if err != nil {
 		panic(err)

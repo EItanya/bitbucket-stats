@@ -10,6 +10,11 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
+var defaultRedisCacheConfig = &RedisCacheConfig{
+	Port:     "6379",
+	Protocol: "tcp",
+}
+
 // RedisCache structure of redis cache, implements cache
 type RedisCache struct {
 	Conn   redis.Conn
@@ -24,7 +29,7 @@ type RedisCacheConfig struct {
 
 func (r *RedisCache) write(key string, entity CacheEntity) error {
 	var data interface{}
-	err := entity.unmarshal(&data)
+	err := entity.Unmarshal(&data)
 	if err != nil {
 		return err
 	}
@@ -40,11 +45,6 @@ func (r *RedisCache) write(key string, entity CacheEntity) error {
 		rrm := redisRepositoryModel{}
 		rrm.initializeRedisRepoModel(typedData)
 		_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(rrm)...)
-
-	// case []interface{}:
-	// 	_, err = r.Conn.Do("SADD", redis.Args{}.Add(key).AddFlat(typedData)...)
-	// case interface{}:
-	// 	_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(typedData)...)
 	default:
 		return errors.New("Redis does not support saving of data type passed in")
 	}
@@ -55,7 +55,6 @@ func (r *RedisCache) write(key string, entity CacheEntity) error {
 }
 
 func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
-	results := make([]CacheEntity, len(keys))
 	if len(keys) == 1 {
 		key := keys[0]
 		if key == AllProjectConst || key == AllRepositoryConst || key == AllFilesConst {
@@ -66,10 +65,10 @@ func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
 			keys = keysPointer
 		}
 	}
+	results := make([]CacheEntity, 0)
 	for _, key := range keys {
 		if splitKey := strings.Split(key, ":"); len(splitKey) > 0 {
 			lookupType := splitKey[0]
-			re := &RedisEntity{}
 			switch lookupType {
 			case "project", "repository":
 				values, err := r.getValues("HGETALL", key)
@@ -78,7 +77,7 @@ func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
 					if err = redis.ScanStruct(values, &dat); err != nil {
 						return nil, err
 					}
-					re.marshal(dat)
+					results = append(results, &dat)
 				} else {
 					var dat redisRepositoryModel
 					if err = redis.ScanStruct(values, &dat); err != nil {
@@ -86,7 +85,7 @@ func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
 					}
 					pm, _ := r.getProject(dat.Project)
 					rm := dat.revertToRepositoryModel(*pm)
-					re.marshal(rm)
+					results = append(results, &rm)
 				}
 			case "files":
 				resp, err := r.Conn.Do("SMEMBERS", redis.Args{}.Add(key)...)
@@ -108,9 +107,8 @@ func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
 					ProjectKey: splitKey[1],
 					RepoSlug:   splitKey[2],
 				}
-				re.marshal(extFiles)
+				results = append(results, &extFiles)
 			}
-			results = append(results, re)
 
 		} else {
 			logger.Log.Infof("Key passed to redis cache (%s) not of the correct form.\n", key)

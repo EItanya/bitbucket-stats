@@ -54,10 +54,8 @@ func (client *Client) GetProjects(projects []string) (*[]models.Project, error) 
 		}
 
 		for _, v := range jsonResp.Values {
-			re := &cache.RedisEntity{}
-			err = cache.MarshalEntity(re, v)
 			key := fmt.Sprintf("project:%s", v.Key)
-			err = cache.SaveToCache(client.cache, key, re)
+			err = cache.SaveToCache(client.cache, key, &v)
 			if err != nil {
 				return nil, err
 			}

@@ -79,29 +79,8 @@ func Initialize(user *UserInfo, cache cache.Cache, url string, forceReset bool) 
 				return nil, err
 			}
 		}
-		// else {
-		// 	client.checkLocalFiles()
-		// }
-
-		// api.Timeout = 15 * time.Second
 		return client, nil
 	}
 	err := errors.New("Proper credentials were not supplied to the program")
 	return nil, err
 }
-
-// func (client *Client) checkLocalFiles() {
-// 	errs := make([]error, 0)
-// 	_, err := os.Stat(projectsFilePath)
-// 	errs = append(errs, err)
-// 	_, err = os.Stat(reposFilePath)
-// 	errs = append(errs, err)
-// 	_, err = os.Stat(filesFilePath)
-// 	errs = append(errs, err)
-// 	for _, e := range errs {
-// 		if e != nil && os.IsNotExist(e) {
-// 			client.Update()
-// 			break
-// 		}
-// 	}
-// }

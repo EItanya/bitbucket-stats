@@ -53,10 +53,8 @@ func (client *Client) GetFiles(repos map[string][]string) (*[]models.FilesID, er
 			if fileList == nil || len(fileList.Files) == 0 {
 				continue
 			}
-			re := &cache.RedisEntity{}
-			err = cache.MarshalEntity(re, fileList.Files)
 			key := fmt.Sprintf("files:%s:%s", fileList.ProjectKey, fileList.RepoSlug)
-			err = cache.SaveToCache(client.cache, key, re)
+			err = cache.SaveToCache(client.cache, key, &fileList.Files)
 			if err != nil {
 				return nil, err
 			}

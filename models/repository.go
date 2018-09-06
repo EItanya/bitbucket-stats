@@ -1,5 +1,7 @@
 package models
 
+import "fmt"
+
 // --------------------------------------
 //
 //  Bitbucket API repo types
@@ -29,6 +31,28 @@ type RepoLinks struct {
 type Link struct {
 	Href string `json:"href"`
 	Name string `json:"name"`
+}
+
+func (r *Repository) Unmarshal(dat interface{}) error {
+	if cast, ok := dat.(*interface{}); ok {
+		*cast = *r
+		return nil
+	}
+	if cast, ok := dat.(*Repository); ok {
+		*cast = *r
+		return nil
+	}
+	return fmt.Errorf("Improper type (%s) was passed into unmarshal method for Project model", dat)
+}
+
+func (r *Repository) Marshal(dat interface{}) error {
+	switch typedData := dat.(type) {
+	case Repository:
+		r = &typedData
+	default:
+		return fmt.Errorf("Improper type (%s) was passed into marshal method for Repository model", dat)
+	}
+	return nil
 }
 
 // FilterRepos function to filter repos

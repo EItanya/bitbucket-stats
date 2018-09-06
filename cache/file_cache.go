@@ -3,9 +3,14 @@ package cache
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 )
+
+var defaultFileCacheConfig = &FileCacheConfig{
+	Dir: "data",
+}
 
 // Type of FileCache
 type FileCache struct {
@@ -20,7 +25,7 @@ type FileCacheConfig struct {
 
 func (c *FileCache) write(key string, entity CacheEntity) error {
 	var data interface{}
-	err := entity.unmarshal(&data)
+	err := entity.Unmarshal(&data)
 	if err != nil {
 		return err
 	}
@@ -39,41 +44,55 @@ func (c *FileCache) write(key string, entity CacheEntity) error {
 	if err != nil {
 		return err
 	}
-	// switch cacheKey.Location {
-	// case projectConst:
-	// 	err := fileCacheSet(projectsCacheTable, cacheKey, data)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// case repositoryConst:
-	// 	err := fileCacheSet(repositoriesCacheTable, cacheKey, data)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// case filesConst:
-	// 	err := fileCacheSet(filesCacheTable, cacheKey, data)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// default:
-	// 	return errors.New("Cache key did not include valid prefix")
-	// }
-	// if err != nil {
-	// 	return err
-	// }
+
 	return nil
 }
 
 func (c *FileCache) read(keys []string) ([]CacheEntity, error) {
-	result := make([]CacheEntity, len(keys))
-	return result, nil
+	if len(keys) == 1 {
+		key := keys[0]
+		if key == AllProjectConst || key == AllRepositoryConst || key == AllFilesConst {
+			keys = c.getAllKeysForTable(strings.Split(key, "_")[0])
+		}
+	}
+
+	results := make([]CacheEntity, len(keys))
+	for _, key := range keys {
+		cacheKey, err := c.translateCacheKey(key)
+		if err != nil {
+			return nil, err
+		}
+
+		cacheTable, err := c.getCacheTable(cacheKey)
+		if err != nil {
+			return nil, err
+		}
+
+		data, err := fileCacheGet(cacheTable, cacheKey)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, &FileEntity{
+			RawData: data,
+		})
+	}
+	return results, nil
 }
 
 func (c *FileCache) check(keyGroup string) (bool, error) {
-	return false, nil
+	if _, err := ioutil.ReadFile(fmt.Sprintf("%s/%s.json", c.Config.Dir, keyGroup)); os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (c *FileCache) clear() error {
+	err := removeAllLocalData(c.Config.Dir)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -114,4 +133,13 @@ func (c FileCache) translateCacheKey(key string) (fileCacheKey, error) {
 		Location: splitKey[0],
 	}
 	return cacheKey, nil
+}
+
+func (c *FileCache) getAllKeysForTable(tableName string) []string {
+	keys := make([]string, 0)
+	table, ok := c.Files[tableName]
+	if ok {
+		keys = table.keys()
+	}
+	return keys
 }
