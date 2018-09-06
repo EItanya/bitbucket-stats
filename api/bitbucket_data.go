@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bitbucket/models"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -25,7 +26,7 @@ type Response struct {
 
 // ProjectResponse JSON form of single project
 type ProjectResponse struct {
-	Values []ProjectModel `json:"values"`
+	Values []models.Project `json:"values"`
 	Response
 }
 
@@ -38,19 +39,9 @@ func (p *ProjectResponse) UnmarshalHTTP(resp *http.Response) error {
 	return err
 }
 
-// ProjectModel JSON form of single project
-type ProjectModel struct {
-	Key         string `json:"key"`
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Public      bool   `json:"public"`
-	Type        string `json:"type"`
-}
-
 // RepoResponse JSON form of single project
 type RepoResponse struct {
-	Values []RepoModel `json:"values"`
+	Values []models.Repository `json:"values"`
 	Response
 }
 
@@ -64,35 +55,9 @@ func (r *RepoResponse) UnmarshalHTTP(resp *http.Response) error {
 	return err
 }
 
-// RepoModel JSON form of single project
-type RepoModel struct {
-	Slug          string       `json:"slug"`
-	ID            int          `json:"id"`
-	Name          string       `json:"name"`
-	ScmID         string       `json:"scmId"`
-	State         string       `json:"state"`
-	StatusMessage string       `json:"statusMessage"`
-	Forkable      bool         `json:"forkable"`
-	Project       ProjectModel `json:"project"`
-	Public        bool         `json:"public"`
-	Links         RepoLinks    `json:"links"`
-}
-
-// RepoLinks JSON form of single project
-type RepoLinks struct {
-	Clone []Link `json:"clone"`
-	Self  []Link `json:"self"`
-}
-
-// Link JSON form of single project
-type Link struct {
-	Href string `json:"href"`
-	Name string `json:"name"`
-}
-
 // FileResponse JSON form of single project
 type FileResponse struct {
-	Values []string `json:"values"`
+	Values models.Files `json:"values"`
 	Response
 }
 

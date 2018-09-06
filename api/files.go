@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bitbucket/models"
 	"fmt"
 	"log"
 	"os"
@@ -40,7 +41,7 @@ func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 			return "Dowloading file data"
 		}))
 		for i := 0; i < numRepos; i += batchNumber {
-			var r []RepoModel
+			var r []models.Repository
 			if i+batchNumber > numRepos {
 				r = reposJSON[i:numRepos]
 			} else {
@@ -78,7 +79,7 @@ func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 	return &allFilesJSON, nil
 }
 
-func (client *Client) getFilesInternal(r []RepoModel, c chan SavedFiles) {
+func (client *Client) getFilesInternal(r []models.Repository, c chan SavedFiles) {
 	for _, v3 := range r {
 		var collector FileResponse
 		nextPageStart := 0

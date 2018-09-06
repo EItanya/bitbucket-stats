@@ -90,9 +90,32 @@ var guiCommand = cli.Command{
 	After:       afterCommandAction,
 }
 
+// var redisCommand = cli.Command{
+// 	Name:        "redis",
+// 	Aliases:     []string{"r"},
+// 	Usage:       "bitbucket redis",
+// 	Description: "Connects to redis",
+// 	Action: func(c *cli.Context) error {
+// 		redisCache := &cache.RedisCache{
+// 			Config: &cache.RedisConfig{
+// 				Port:     "6379",
+// 				Protocol: "tcp",
+// 			},
+// 		}
+// 		err := cache.InitializeCache(redisCache)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		n, err := redisCache.Conn.Do("INCR", "counter")
+// 		log.Println(n)
+// 		return err
+// 	},
+// }
+
 var cliCommands = []cli.Command{
 	statsCommand,
 	getCommand,
 	updateCommand,
 	guiCommand,
+	// redisCommand,
 }

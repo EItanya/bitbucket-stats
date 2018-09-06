@@ -1,22 +1,22 @@
 package api
 
 import (
+	"bitbucket/cache"
+	"bitbucket/models"
 	"fmt"
 	"os"
-
-	"github.com/gosuri/uiprogress"
 )
 
 // SavedProjects is the format by which projects are saved
 type SavedProjects ProjectResponse
 
 // Filter method to filter saved projects
-func (data *SavedProjects) Filter(projects []string) []ProjectModel {
+func (data *SavedProjects) Filter(projects []string) []models.Project {
 	if len(projects) == 0 {
 		return data.Values
 	}
-	filteredProjects := make([]ProjectModel, 0)
-	ch := make(chan []ProjectModel)
+	filteredProjects := make([]models.Project, 0)
+	ch := make(chan []models.Project)
 	for _, val := range projects {
 		go data.filterProjects(val, data.Values, ch)
 	}
@@ -26,8 +26,8 @@ func (data *SavedProjects) Filter(projects []string) []ProjectModel {
 	return filteredProjects
 }
 
-func (data SavedProjects) filterProjects(val string, p []ProjectModel, ch chan []ProjectModel) {
-	pm := make([]ProjectModel, 0)
+func (data SavedProjects) filterProjects(val string, p []models.Project, ch chan []models.Project) {
+	pm := make([]models.Project, 0)
 	for _, v := range p {
 		if v.Key == val || string(v.ID) == val {
 			pm = append(pm, v)
@@ -52,49 +52,27 @@ var projectsURLPaths = func(projects []string) []string {
 const projectsFilePath = "data/projects.json"
 
 // GetProjects get all projects from Bitbucket
-func (client *Client) GetProjects(projects []string) (*[]ProjectModel, error) {
-	var projectJSON SavedProjects
-	// projectJSON := &ProjectResponse{}
-	if _, err := os.Stat(projectsFilePath); os.IsNotExist(err) {
-		bar := uiprogress.AddBar(2)
-		bar.AppendCompleted()
-		bar.PrependFunc(prependFormatFunc(func(b *uiprogress.Bar) string {
-			if b.Current() == b.Total {
-				return "Project data retrieved"
-			} else if b.Current() >= 1 {
-				return "Saving project data"
-			}
-			return "Dowloading project data"
-		}))
-		opts := urlOptions{
-			limit: 250,
-		}
-		resp, err := client.api.Get(projectsURLPath, opts)
+func (client *Client) GetProjects(projects []string) (*[]models.Project, error) {
 
-		projectJSON := &ProjectResponse{}
-		// GetEntity(resp, projectJSON)
-
-		if err != nil {
-			return nil, err
-		}
-		bar.Incr()
-		err = readJSONFromResp(resp, &projectJSON)
-		if err != nil {
-			return nil, err
-		}
-		err = writeJSONToFile(&projectJSON, projectsFilePath)
-		if err != nil {
-			return nil, err
-		}
-		bar.Incr()
-	} else {
-		err := readJSONFromFile(projectsFilePath, &projectJSON)
-		if err != nil {
-			return nil, err
-		}
+	redisCache, err := cache.NewRedisCache(cache.RedisConfig{
+		Port:     "6379",
+		Protocol: "tcp",
+	})
+	entities, err := cache.ReadFromCache(redisCache, []string{"all_project"})
+	if err != nil {
+		return nil, err
 	}
-	result := projectJSON.Filter(projects)
-	return &result, nil
+	translatedEntities := make([]models.Project, 0)
+	for _, ce := range entities {
+		var dat models.Project
+		err = cache.UnmarshalEntity(ce, &dat)
+		if err != nil {
+			return nil, err
+		}
+		translatedEntities = append(translatedEntities, dat)
+	}
+	result := &translatedEntities
+	return result, nil
 }
 
 func removeLocalProjectsData() error {

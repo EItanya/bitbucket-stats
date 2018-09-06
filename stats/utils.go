@@ -1,7 +1,7 @@
 package stats
 
 import (
-	"bitbucket/api"
+	"bitbucket/models"
 	"strings"
 )
 
@@ -40,7 +40,7 @@ type splitRepos struct {
 	projectKey string
 }
 
-func splitReposIntoProjects(proj api.ProjectModel, langData []repoLanguageData, langChan chan splitRepos) {
+func splitReposIntoProjects(proj models.Project, langData []repoLanguageData, langChan chan splitRepos) {
 	jointRepos := make([]repoLanguageData, 0)
 	for _, lang := range langData {
 		if lang.ProjectKey == proj.Key {
@@ -54,7 +54,7 @@ func splitReposIntoProjects(proj api.ProjectModel, langData []repoLanguageData, 
 	langChan <- result
 }
 
-func combineReposIntoProjects(projects *[]api.ProjectModel, langData []repoLanguageData) []projectLanguageData {
+func combineReposIntoProjects(projects *[]models.Project, langData []repoLanguageData) []projectLanguageData {
 	langChan := make(chan splitRepos)
 	splitByProject := make([]splitRepos, 0)
 	result := make([]projectLanguageData, 0)

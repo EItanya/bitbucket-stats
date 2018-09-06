@@ -2,6 +2,7 @@ package stats
 
 import (
 	"bitbucket/api"
+	"bitbucket/models"
 	"fmt"
 	"sync"
 )
@@ -12,8 +13,8 @@ type Context struct {
 	FileDataByRepo    []repoLanguageData
 	FileDataByProject []projectLanguageData
 	files             *api.SavedFiles
-	repos             *[]api.RepoModel
-	projects          *[]api.ProjectModel
+	repos             *[]models.Repository
+	projects          *[]models.Project
 	TotalFileCount    int
 }
 
