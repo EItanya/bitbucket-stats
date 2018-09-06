@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -18,9 +19,12 @@ func main() {
 	app.Action = mainAction
 	app.OnUsageError = onUsageError
 	app.ExitErrHandler = func(c *cli.Context, err error) {
-		log.Fatalln(err)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 	app.Run(os.Args)
+	fmt.Println("Program Executed Successfully")
 
 	// fmt.Println(time.Since(start))
 }

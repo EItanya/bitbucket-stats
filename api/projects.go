@@ -50,7 +50,7 @@ var projectsURLPaths = func(projects []string) []string {
 const projectsFilePath = "data/projects.json"
 
 // GetProjects get all projects from Bitbucket
-func (client *Client) GetProjects(projects []string) ([]ProjectModel, error) {
+func (client *Client) GetProjects(projects []string) (*[]ProjectModel, error) {
 	var projectJSON SavedProjects
 	if _, err := os.Stat(projectsFilePath); os.IsNotExist(err) {
 		resp, err := client.api.Get(projectsURLPath, 250)
@@ -71,7 +71,8 @@ func (client *Client) GetProjects(projects []string) ([]ProjectModel, error) {
 			return nil, err
 		}
 	}
-	return projectJSON.Filter(projects), nil
+	result := projectJSON.Filter(projects)
+	return &result, nil
 }
 
 func removeLocalProjectsData() error {

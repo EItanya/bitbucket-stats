@@ -9,11 +9,29 @@ import (
 type SavedRepos []RepoModel
 
 // Filter is the function to filter repos
-func (data *SavedRepos) Filter(repos map[string][]string) {
+func (data SavedRepos) Filter(repos []string) []RepoModel {
+	if len(repos) == 0 {
+		return data
+	}
+	filteredRepos := make([]RepoModel, 0)
+	ch := make(chan []RepoModel)
+	for _, val := range repos {
+		go data.filterRepos(val, data, ch)
+	}
+	for range repos {
+		filteredRepos = append(filteredRepos, <-ch...)
+	}
+	return filteredRepos
 
 }
-func (data SavedRepos) filterRepos() {
-
+func (data SavedRepos) filterRepos(val string, r []RepoModel, ch chan []RepoModel) {
+	rm := make([]RepoModel, 0)
+	for _, v := range r {
+		if v.Slug == val {
+			rm = append(rm, v)
+		}
+	}
+	ch <- rm
 }
 
 var reposURLPath = func(projKey string) string {
@@ -23,7 +41,7 @@ var reposURLPath = func(projKey string) string {
 const reposFilePath = "data/repos.json"
 
 // GetRepos get all repos from Bitbucket
-func (client *Client) GetRepos(repos map[string][]string) (SavedRepos, error) {
+func (client *Client) GetRepos(repos []string) (*[]RepoModel, error) {
 	var reposJSON SavedRepos
 	var repoChan = make(chan []RepoModel)
 	if _, err := os.Stat(reposFilePath); os.IsNotExist(err) {
@@ -47,7 +65,8 @@ func (client *Client) GetRepos(repos map[string][]string) (SavedRepos, error) {
 			return nil, err
 		}
 	}
-	return reposJSON, nil
+	result := reposJSON.Filter(repos)
+	return &result, nil
 }
 
 func (client *Client) getReposInternal(v ProjectModel, c chan []RepoModel) {

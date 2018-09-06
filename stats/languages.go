@@ -12,7 +12,7 @@ type Context struct {
 	FileDataByRepo    []repoLanguageData
 	FileDataByProject []projectLanguageData
 	files             *api.SavedFiles
-	repos             *api.SavedRepos
+	repos             *[]api.RepoModel
 	projects          *[]api.ProjectModel
 	TotalFileCount    int
 }
@@ -23,17 +23,17 @@ func (c *Context) Initialize(client *api.Client) error {
 	if err != nil {
 		return err
 	}
-	c.files = &files
-	repos, err := client.GetRepos(make(map[string][]string))
+	c.files = files
+	repos, err := client.GetRepos(make([]string, 0))
 	if err != nil {
 		return err
 	}
-	c.repos = &repos
+	c.repos = repos
 	projects, err := client.GetProjects(make([]string, 0))
 	if err != nil {
 		return err
 	}
-	c.projects = &projects
+	c.projects = projects
 	c.TotalFileCount = 0
 	return nil
 }
@@ -105,9 +105,9 @@ func (c *Context) CountFilesByProject() {
 }
 
 // CountFilesByLanguage by project
-func (c *Context) CountFilesByLanguage(langs []string) {
-	c.RawFileData = make(languageMap)
-}
+// func (c *Context) CountFilesByLanguage(langs []string) {
+// 	c.RawFileData = make(languageMap)
+// }
 
 // ReposWithNodeModules by project
 func (c *Context) ReposWithNodeModules() []string {

@@ -16,7 +16,7 @@ var filesURLPath = func(projKey, repoSlug string) string {
 const filesFilePath = "data/files.json"
 
 // GetFiles get all repos from Bitbucket
-func (client *Client) GetFiles(repos map[string][]string) (SavedFiles, error) {
+func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 	var allFilesJSON = make(SavedFiles)
 
 	if _, err := os.Stat(filesFilePath); os.IsNotExist(err) {
@@ -59,7 +59,7 @@ func (client *Client) GetFiles(repos map[string][]string) (SavedFiles, error) {
 		}
 	}
 
-	return allFilesJSON, nil
+	return &allFilesJSON, nil
 }
 
 func (client *Client) getFilesInternal(r []RepoModel, c chan SavedFiles) {

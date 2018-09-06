@@ -45,7 +45,7 @@ func (client *Client) Update() error {
 	if err != nil {
 		return err
 	}
-	_, err = client.GetRepos(make(map[string][]string))
+	_, err = client.GetRepos(make([]string, 0))
 	if err != nil {
 		return err
 	}

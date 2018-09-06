@@ -32,7 +32,7 @@ func getAllAction(c *cli.Context) error {
 }
 
 func getReposAction(c *cli.Context) error {
-	client.GetRepos(make(map[string][]string))
+	client.GetRepos(make([]string, 0))
 	return nil
 }
 
@@ -42,11 +42,6 @@ func getProjectsAction(c *cli.Context) error {
 }
 
 func statsAllAction(c *cli.Context) error {
-	// statsJSON, ok := statsCtx.ToJSON("RawFileData")
-	// if ok {
-	// 	fmt.Println(statsJSON)
-	// 	fmt.Println(statsCtx.TotalFileCount)
-	// }
 	totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
 	for key, val := range statsCtx.RawFileData {
 		if key != "Other" {
@@ -97,7 +92,11 @@ func statsNodeModulesAction(c *cli.Context) error {
 }
 
 func statsLangAction(c *cli.Context) error {
-	for _, val := range statsCtx.GetDataByLanguage([]string{"GO"}) {
+	var filter []string
+	if c.NArg() > 0 {
+		filter = strings.Split(c.Args().First(), ",")
+	}
+	for _, val := range statsCtx.GetDataByLanguage(filter) {
 		fmt.Println(val)
 	}
 	return nil
@@ -130,7 +129,7 @@ func checkUserBeforeAction(c *cli.Context) error {
 	splitUsername := strings.Split(c.String("user"), ":")
 	url := strings.Trim(c.String("url"), " \n")
 	if len(splitUsername) != 2 {
-		return errors.New("Inputted username, credentials was not in the proper format. Should be <username>:<password> was " + c.String("user"))
+		return errors.New("Inputted credentials was not in the proper format. Should be <username>:<password> was " + c.String("user"))
 	} else if url == "" {
 		return errors.New("Inputted URL is not in the proper format")
 	}
@@ -147,7 +146,7 @@ func checkUserBeforeAction(c *cli.Context) error {
 }
 
 func afterCommandAction(c *cli.Context) error {
-	fmt.Println("shutting down")
+	fmt.Println("Performing post action func")
 	return nil
 }
 
