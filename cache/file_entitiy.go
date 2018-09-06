@@ -5,48 +5,47 @@ import (
 	"errors"
 )
 
-// Type of entity saved to Redis Cache
-type RedisEntity struct {
+// Type of entity saved to File Cache
+type FileEntity struct {
 	RawData interface{}
 }
 
-// Retrieve data
-func (re *RedisEntity) unmarshal(dat interface{}) error {
+func (fe *FileEntity) unmarshal(dat interface{}) error {
 	switch typedData := dat.(type) {
 	case *models.Project:
-		*typedData = re.RawData.(models.Project)
-		// *dat.(*models.Project) = re.RawData.(models.Project)
+		*typedData = fe.RawData.(models.Project)
+		// *dat.(*models.Project) = fe.RawData.(models.Project)
 	case *models.Repository:
-		*dat.(*models.Repository) = re.RawData.(models.Repository)
+		*dat.(*models.Repository) = fe.RawData.(models.Repository)
 	case *models.FilesID:
-		*dat.(*models.FilesID) = re.RawData.(models.FilesID)
+		*dat.(*models.FilesID) = fe.RawData.(models.FilesID)
 	// case *interface{}:
 	// 	e := (*interface{})(unsafe.Pointer(typedData))
-	// 	*e = re.RawData
+	// 	*e = fe.RawData
 	default:
 		return errors.New("Must pass pointer to interface into unmarshal method")
 	}
 	return nil
 }
 
-func (re *RedisEntity) marshal(dat interface{}) error {
+func (fe *FileEntity) marshal(dat interface{}) error {
 	switch typedData := dat.(type) {
 	case models.Repository:
-		re.RawData = typedData
+		fe.RawData = typedData
 	case models.Project:
-		re.RawData = typedData
+		fe.RawData = typedData
 	case models.FilesID:
-		re.RawData = typedData
+		fe.RawData = typedData
 	case models.Files:
-		re.RawData = typedData
+		fe.RawData = typedData
 	case []string:
-		re.RawData = typedData
+		fe.RawData = typedData
 	case int:
-		re.RawData = typedData
+		fe.RawData = typedData
 	case float64:
-		re.RawData = typedData
+		fe.RawData = typedData
 	case string:
-		re.RawData = typedData
+		fe.RawData = typedData
 	default:
 		return errors.New("Data passed to Redis Entity was not in correct form")
 	}

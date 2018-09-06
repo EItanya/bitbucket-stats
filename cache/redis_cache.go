@@ -10,18 +10,14 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-const AllProjectConst = "all_project"
-const AllRepositoryConst = "all_repository"
-const AllFilesConst = "all_files"
-
 // RedisCache structure of redis cache, implements cache
 type RedisCache struct {
 	Conn   redis.Conn
-	Config *RedisConfig
+	Config *RedisCacheConfig
 }
 
-// RedisConfig structure of config for redis cache
-type RedisConfig struct {
+// RedisCacheConfig structure of config for redis cache
+type RedisCacheConfig struct {
 	Port     string
 	Protocol string
 }

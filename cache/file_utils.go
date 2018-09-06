@@ -1,10 +1,9 @@
-package api
+package cache
 
 import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"net/http"
 	"strings"
 )
 
@@ -13,14 +12,14 @@ func removeAllLocalData() error {
 	// if err != nil {
 	// 	return err
 	// }
-	err := removeLocalReposData()
-	if err != nil {
-		return err
-	}
-	err = removeLocalProjectsData()
-	if err != nil {
-		return err
-	}
+	// err := removeLocalReposData()
+	// if err != nil {
+	// 	return err
+	// }
+	// err = removeLocalProjectsData()
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -39,7 +38,7 @@ func writeJSONToFile(data interface{}, filename string) error {
 	return nil
 }
 
-func readJSONFromFile(filename string, dataType interface{}) error {
+func readJSONFromFile(dataType interface{}, filename string) error {
 	if !strings.Contains(filename, ".json") {
 		return errors.New("Read file must be a valid json filename")
 	}
@@ -52,12 +51,4 @@ func readJSONFromFile(filename string, dataType interface{}) error {
 		return err
 	}
 	return nil
-}
-
-func readJSONFromResp(resp *http.Response, dat interface{}) error {
-	byt, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(byt, &dat)
 }

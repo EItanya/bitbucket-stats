@@ -2,9 +2,20 @@ package cache
 
 import (
 	"bitbucket/logger"
+	"errors"
 
 	"go.uber.org/zap"
 )
+
+const defaultDir = "data"
+
+const projectConst = "project"
+const repositoryConst = "repository"
+const filesConst = "files"
+
+const AllProjectConst = "all_" + projectConst
+const AllRepositoryConst = "all_" + repositoryConst
+const AllFilesConst = "all_" + filesConst
 
 // Cache interface for Caches
 type Cache interface {
@@ -51,9 +62,23 @@ func CheckCache(c Cache, keyGroup string) (bool, error) {
 	return ok, err
 }
 
-func NewRedisCache(config RedisConfig) (*RedisCache, error) {
+func NewRedisCache(config *RedisCacheConfig) (*RedisCache, error) {
+	if config == nil {
+		return nil, errors.New("config object for NewRedisCache cannot be nil")
+	}
 	cache := &RedisCache{
-		Config: &config,
+		Config: config,
+	}
+	err := cache.initialize()
+	return cache, err
+}
+
+func NewFileCache(config *FileCacheConfig) (*FileCache, error) {
+	if config == nil {
+		return nil, errors.New("config object for NewFileCache cannot be nil")
+	}
+	cache := &FileCache{
+		Config: config,
 	}
 	err := cache.initialize()
 	return cache, err

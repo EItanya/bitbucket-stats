@@ -32,6 +32,7 @@ type ProjectResponse struct {
 
 func (p *ProjectResponse) UnmarshalHTTP(resp *http.Response) error {
 	byt, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
@@ -47,6 +48,7 @@ type RepoResponse struct {
 
 func (r *RepoResponse) UnmarshalHTTP(resp *http.Response) error {
 	byt, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
@@ -63,6 +65,7 @@ type FileResponse struct {
 
 func (f *FileResponse) UnmarshalHTTP(resp *http.Response) error {
 	byt, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
