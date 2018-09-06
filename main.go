@@ -30,26 +30,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// client, err := api.Initialize(nil)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// // err = client.Update()
-	// files, err := client.GetFiles(make(map[string][]string))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// repos, err := client.GetRepos(make(map[string][]string))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// projects, err := client.GetProjects(make([]string, 0))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// count := stats.Languages{}
-	// count.CountAllFiles(&files)
-	// count.CountFilesByRepo(&files, &repos)
-	// count.CountFilesByProject(&files, &projects)
 	// fmt.Println(time.Since(start))
 }

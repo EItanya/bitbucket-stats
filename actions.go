@@ -51,12 +51,17 @@ func getProjectsAction(c *cli.Context) error {
 }
 
 func statsAllAction(c *cli.Context) error {
-	statsJSON, ok := statsCtx.ToJSON("RawFileData")
-	if ok {
-		fmt.Println(statsJSON)
-		fmt.Println(statsCtx.TotalFileCount)
+	// statsJSON, ok := statsCtx.ToJSON("RawFileData")
+	// if ok {
+	// 	fmt.Println(statsJSON)
+	// 	fmt.Println(statsCtx.TotalFileCount)
+	// }
+	totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
+	for key, val := range statsCtx.RawFileData {
+		if key != "Other" {
+			fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
+		}
 	}
-
 	return nil
 }
 
@@ -80,17 +85,19 @@ func checkUserBeforeAction(c *cli.Context) error {
 	if !c.IsSet("user") {
 		return errUser
 	}
-	splitUsername := strings.Split(c.String("user"), ":")
-	user := api.UserInfo{
-		Username: splitUsername[0],
-		Password: splitUsername[1],
+	if splitUsername := strings.Split(c.String("user"), ":"); len(splitUsername) == 2 {
+		user := api.UserInfo{
+			Username: splitUsername[0],
+			Password: splitUsername[1],
+		}
+		client, err = api.Initialize(&user)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Good News, User exists")
+		return nil
 	}
-	client, err = api.Initialize(&user)
-	if err != nil {
-		return err
-	}
-	fmt.Println("Good News, User exists")
-	return nil
+	return errors.New("Inputted username, credentials was not in the proper format. Should be <username>: password was " + c.String("user"))
 }
 
 func onUsageError(c *cli.Context, err error, isSubcommand bool) error {
