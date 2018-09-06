@@ -2,6 +2,7 @@ package main
 
 import (
 	"bitbucket/api"
+	"bitbucket/arrays"
 	"bitbucket/stats"
 	"errors"
 	"fmt"
@@ -57,20 +58,43 @@ func statsAllAction(c *cli.Context) error {
 }
 
 func statsReposAction(c *cli.Context) error {
-	totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
-	for key, val := range statsCtx.RawFileData {
-		if key != "Other" {
-			fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
+	var filter []string
+	if c.NArg() > 0 {
+		filter = strings.Split(c.Args().First(), ",")
+	}
+	for _, val := range statsCtx.FileDataByRepo {
+		if filter != nil && arrays.IndexOf(filter, val.RepoSlug) == -1 {
+			continue
+		}
+		repoTotalFileCount := 0
+		for _, total := range val.Stats {
+			repoTotalFileCount += total
+		}
+		fmt.Printf("(%s:%s)\n", val.ProjectKey, val.RepoSlug)
+		for lang, total := range val.Stats {
+			fmt.Printf("  %s: %d/%d (%.2f%%)\n", lang, total, repoTotalFileCount, (float64(total)/float64(repoTotalFileCount))*100)
 		}
 	}
 	return nil
 }
 
 func statsProjectsAction(c *cli.Context) error {
-	totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
-	for key, val := range statsCtx.RawFileData {
-		if key != "Other" {
-			fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
+	var filter []string
+	if c.NArg() > 0 {
+		filter = strings.Split(c.Args().First(), ",")
+	}
+
+	for _, val := range statsCtx.FileDataByProject {
+		if filter != nil && arrays.IndexOf(filter, val.ProjectKey) == -1 {
+			continue
+		}
+		repoTotalFileCount := 0
+		for _, total := range val.Stats {
+			repoTotalFileCount += total
+		}
+		fmt.Printf("(%s)\n", val.ProjectKey)
+		for lang, total := range val.Stats {
+			fmt.Printf("  %s: %d/%d (%.2f%%)\n", lang, total, repoTotalFileCount, (float64(total)/float64(repoTotalFileCount))*100)
 		}
 	}
 	return nil

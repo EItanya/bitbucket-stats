@@ -42,14 +42,14 @@ var statsCommand = cli.Command{
 			Usage:       "bitbucket stats repos",
 			Aliases:     []string{"r"},
 			Description: "Gets language stats for repos on bitbucket at ***REMOVED***",
-			Action:      statsAllAction,
+			Action:      statsReposAction,
 		},
 		{
 			Name:        "projects",
 			Usage:       "bitbucket stats projects",
 			Aliases:     []string{"p"},
 			Description: "Gets language stats for projects on bitbucket at ***REMOVED***",
-			Action:      statsAllAction,
+			Action:      statsProjectsAction,
 		},
 		{
 			Name:        "files",
