@@ -9,9 +9,8 @@ import (
 
 // API basis for API class
 type API struct {
-	BaseURL  string
-	username string
-	password string
+	BaseURL string
+	user    UserInfo
 	http.Client
 }
 
@@ -22,7 +21,7 @@ var errAuthorization = errors.New("Authorization error")
 var errNotFound = errors.New("Resource Not Found")
 
 func (api *API) creds() (string, string) {
-	return api.username, api.password
+	return api.user.Username, api.user.Password
 }
 
 func (api *API) doExt(req *http.Request) (*http.Response, error) {
@@ -35,9 +34,7 @@ func (api *API) doExt(req *http.Request) (*http.Response, error) {
 	switch {
 	case resp.StatusCode == 200:
 		return resp, nil
-	case resp.StatusCode == 400:
-		return resp, authErrors(resp)
-	case resp.StatusCode >= 401 && resp.StatusCode <= 499:
+	case resp.StatusCode >= 400 && resp.StatusCode <= 499:
 		return resp, authErrors(resp)
 	case resp.StatusCode >= 500:
 		return resp, errors.New("500 error, I don't even know how you managed that")

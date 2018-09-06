@@ -59,9 +59,8 @@ func (client *Client) Update() error {
 func setupClient(user *UserInfo, url string) (*Client, error) {
 	if user.Username != "" && user.Password != "" {
 		api := &API{
-			BaseURL:  url,
-			username: user.Username,
-			password: user.Password,
+			BaseURL: url,
+			user:    *user,
 		}
 		client := &Client{
 			api:  api,

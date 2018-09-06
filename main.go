@@ -17,10 +17,10 @@ func main() {
 	app.Usage = "Gather bitbucket stats"
 	app.Action = mainAction
 	app.OnUsageError = onUsageError
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
+	app.ExitErrHandler = func(c *cli.Context, err error) {
+		log.Fatalln(err)
 	}
+	app.Run(os.Args)
 
 	// fmt.Println(time.Since(start))
 }
