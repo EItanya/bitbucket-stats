@@ -2,7 +2,6 @@ package stats
 
 import (
 	"bitbucket/api"
-	"bitbucket/arrays"
 	"fmt"
 	"sync"
 )
@@ -133,40 +132,25 @@ func (c *Context) ReposWithNodeModules() []string {
 }
 
 // GetDataByLanguage gets organized data by language
-func (c *Context) GetDataByLanguage(langs []string) []*dataByLanguage {
-	ch := make(chan *dataByLanguage)
-	for _, val := range langs {
-		go func(c *Context, lang string) {
-			dbl := &dataByLanguage{
-				Repos:    make([]string, 0),
-				Language: lang,
-			}
-			wg := sync.WaitGroup{}
-			for projectKey, repos := range *c.files {
-				wg.Add(len(repos))
-				for repoSlug, repoFiles := range repos {
-					go func(files []string, projectKey, repoSlug string) {
-						defer wg.Done()
-						languagePresent := arrays.FindSTR(files, func(s string) bool {
-							if s == lang {
-								return true
-							}
-							return false
-						})
-						if languagePresent != "" {
-							dbl.Lock()
-							dbl.Repos = append(dbl.Repos, projectKey+":"+repoSlug)
-							dbl.Unlock()
-						}
-					}(repoFiles.Values, projectKey, repoSlug)
+func (c *Context) GetDataByLanguage(langs []string) []repoLanguageData {
+	ch := make(chan repoLanguageData)
+	if c.FileDataByRepo == nil {
+		c.CountFilesByRepo()
+	}
+
+	for _, val := range c.FileDataByRepo {
+		go func(ch chan repoLanguageData, r repoLanguageData, langs []string) {
+			for _, inputLang := range langs {
+				for lang := range r.Stats.Data {
+					if inputLang == lang {
+						ch <- r
+					}
 				}
 			}
-			wg.Wait()
-			ch <- dbl
-		}(c, val)
+		}(ch, val, langs)
 	}
-	result := make([]*dataByLanguage, 0)
-	for range langs {
+	result := make([]repoLanguageData, 0)
+	for i := 0; i < len(c.FileDataByRepo)*len(langs); i++ {
 		result = append(result, <-ch)
 	}
 	return result
