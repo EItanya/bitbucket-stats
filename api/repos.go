@@ -22,7 +22,7 @@ var reposURLPath = func(projKey string) string {
 
 const reposFilePath = "data/repos.json"
 
-// GetRepos get all repos from ***REMOVED*** Bitbucket
+// GetRepos get all repos from Bitbucket
 func (client *Client) GetRepos(repos map[string][]string) (SavedRepos, error) {
 	var reposJSON SavedRepos
 	var repoChan = make(chan []RepoModel)

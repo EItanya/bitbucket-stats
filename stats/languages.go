@@ -2,6 +2,7 @@ package stats
 
 import (
 	"bitbucket/api"
+	"bitbucket/arrays"
 	"fmt"
 	"sync"
 )
@@ -55,7 +56,7 @@ func (c *Context) ToJSON(key string) (string, bool) {
 // CountAllFiles counts all
 func (c *Context) CountAllFiles() {
 	counter := &languageData{
-		data: make(languageMap),
+		Data: make(languageMap),
 	}
 	for _, repo := range *c.files {
 		for _, fileJSON := range repo {
@@ -64,10 +65,10 @@ func (c *Context) CountAllFiles() {
 		}
 	}
 	counter.Wait()
-	for _, value := range counter.data {
+	for _, value := range counter.Data {
 		c.TotalFileCount += value
 	}
-	c.RawFileData = counter.data
+	c.RawFileData = counter.Data
 }
 
 // CountFilesByRepo by repo
@@ -128,5 +129,45 @@ func (c *Context) ReposWithNodeModules() []string {
 		}
 	}
 	wg.Wait()
+	return result
+}
+
+// GetDataByLanguage gets organized data by language
+func (c *Context) GetDataByLanguage(langs []string) []*dataByLanguage {
+	ch := make(chan *dataByLanguage)
+	for _, val := range langs {
+		go func(c *Context, lang string) {
+			dbl := &dataByLanguage{
+				Repos:    make([]string, 0),
+				Language: lang,
+			}
+			wg := sync.WaitGroup{}
+			for projectKey, repos := range *c.files {
+				wg.Add(len(repos))
+				for repoSlug, repoFiles := range repos {
+					go func(files []string, projectKey, repoSlug string) {
+						defer wg.Done()
+						languagePresent := arrays.FindSTR(files, func(s string) bool {
+							if s == lang {
+								return true
+							}
+							return false
+						})
+						if languagePresent != "" {
+							dbl.Lock()
+							dbl.Repos = append(dbl.Repos, projectKey+":"+repoSlug)
+							dbl.Unlock()
+						}
+					}(repoFiles.Values, projectKey, repoSlug)
+				}
+			}
+			wg.Wait()
+			ch <- dbl
+		}(c, val)
+	}
+	result := make([]*dataByLanguage, 0)
+	for range langs {
+		result = append(result, <-ch)
+	}
 	return result
 }

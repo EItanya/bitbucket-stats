@@ -19,6 +19,7 @@ const batchNumber = 10
 
 var errBadRequest = errors.New("Bad Request attempted")
 var errAuthorization = errors.New("Authorization error")
+var errNotFound = errors.New("Resource Not Found")
 
 func (api *API) creds() (string, string) {
 	return api.username, api.password
@@ -38,6 +39,8 @@ func (api *API) doExt(req *http.Request) (*http.Response, error) {
 		return resp, errBadRequest
 	case 401:
 		return resp, errAuthorization
+	case 404:
+		return resp, errNotFound
 	default:
 		return resp, err
 	}

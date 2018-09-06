@@ -4,5 +4,5 @@ data
 debug
 bitbucket
 .DS_Store
-.env
+.env*
 .creds

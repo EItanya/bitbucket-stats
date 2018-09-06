@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-const baseURL = "https://***REMOVED***/rest/api/1.0"
-
 // Client basic type of bitbucket api client
 type Client struct {
 	api  *API
@@ -20,17 +18,17 @@ func (client *Client) checkUser() error {
 }
 
 // Initialize sets up bitbucket API
-func Initialize(user *UserInfo) (*Client, error) {
+func Initialize(user *UserInfo, url string) (*Client, error) {
 	if user != nil {
-		return setupClient(user)
+		return setupClient(user, url)
 	} else if len(os.Args) > 1 {
 		user, err := translateArgs()
 		if err != nil {
 			return nil, err
 		}
-		return setupClient(user)
+		return setupClient(user, url)
 	}
-	return setupClient(nil)
+	return setupClient(nil, url)
 }
 
 // Update retrieves all data and saves
@@ -58,10 +56,10 @@ func (client *Client) Update() error {
 	return nil
 }
 
-func setupClient(user *UserInfo) (*Client, error) {
+func setupClient(user *UserInfo, url string) (*Client, error) {
 	if user.Username != "" && user.Password != "" {
 		api := &API{
-			BaseURL:  baseURL,
+			BaseURL:  url,
 			username: user.Username,
 			password: user.Password,
 		}

@@ -16,29 +16,29 @@ func (l *languageMap) ToJSON() (string, error) {
 }
 
 type languageData struct {
-	data  languageMap
-	total int
+	Data  languageMap
+	Total int
 	sync.WaitGroup
 	sync.Mutex
 }
 
 func (counter *languageData) countFiles(files []string) {
 	defer counter.Done()
-	counter.total += len(files)
+	counter.Total += len(files)
 	for _, val := range files {
 		fileType, validFileType := getFiletype(val)
 		counter.Lock()
 		if languageKey, ok := extensionMap[fileType]; ok && validFileType {
-			if val, ok := counter.data[languageKey]; ok {
-				counter.data[languageKey] = val + 1
+			if val, ok := counter.Data[languageKey]; ok {
+				counter.Data[languageKey] = val + 1
 			} else {
-				counter.data[languageKey] = 1
+				counter.Data[languageKey] = 1
 			}
 		} else {
-			if val, ok := counter.data[other]; ok {
-				counter.data[other] = val + 1
+			if val, ok := counter.Data[other]; ok {
+				counter.Data[other] = val + 1
 			} else {
-				counter.data[other] = 1
+				counter.Data[other] = 1
 			}
 		}
 		counter.Unlock()
@@ -46,7 +46,7 @@ func (counter *languageData) countFiles(files []string) {
 }
 
 type projectLanguageData struct {
-	Stats      languageMap
+	Stats      *languageData
 	ProjectKey string
 }
 
@@ -59,7 +59,7 @@ func (l *projectLanguageData) ToJSON() (string, error) {
 }
 
 type repoLanguageData struct {
-	Stats      languageMap
+	Stats      *languageData
 	ProjectKey string
 	RepoSlug   string
 }
@@ -81,17 +81,24 @@ type organizedLanguageData struct {
 func (counter *organizedLanguageData) countFiles(files []string, repoSlug, projectKey string) {
 	defer counter.Done()
 	internalCounter := languageData{
-		data: make(languageMap),
+		Data: make(languageMap),
 	}
 	internalCounter.Add(1)
 	internalCounter.countFiles(files)
 	internalCounter.Wait()
 	counter.Lock()
 	extendedRepo := repoLanguageData{
-		Stats:      internalCounter.data,
+		Stats:      &internalCounter,
 		RepoSlug:   repoSlug,
 		ProjectKey: projectKey,
 	}
 	counter.data = append(counter.data, extendedRepo)
 	counter.Unlock()
+}
+
+type dataByLanguage struct {
+	Repos    []string
+	Language string
+	sync.WaitGroup
+	sync.Mutex
 }

@@ -5,22 +5,26 @@ import (
 	"strings"
 )
 
-func combineLanguageMaps(langMapsExt []repoLanguageData) languageMap {
-	langMaps := make([]languageMap, 0)
-	for _, v := range langMapsExt {
-		langMaps = append(langMaps, v.Stats)
+func combineLanguageMaps(langDataMapsExt []repoLanguageData) *languageData {
+	langDataMaps := make([]*languageData, 0)
+	for _, v := range langDataMapsExt {
+		langDataMaps = append(langDataMaps, v.Stats)
 	}
-	result := make(languageMap)
-	for _, langMap := range langMaps {
-		for lang, counter := range langMap {
-			if _, ok := result[lang]; ok {
-				result[lang] += counter
+	result := languageData{
+		Data:  make(languageMap),
+		Total: 0,
+	}
+	for _, langData := range langDataMaps {
+		for lang, counter := range langData.Data {
+			result.Total += counter
+			if _, ok := result.Data[lang]; ok {
+				result.Data[lang] += counter
 			} else {
-				result[lang] = counter
+				result.Data[lang] = counter
 			}
 		}
 	}
-	return result
+	return &result
 }
 
 func combineProject(val splitRepos, c chan projectLanguageData) {

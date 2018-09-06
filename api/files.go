@@ -15,7 +15,7 @@ var filesURLPath = func(projKey, repoSlug string) string {
 
 const filesFilePath = "data/files.json"
 
-// GetFiles get all repos from ***REMOVED*** Bitbucket
+// GetFiles get all repos from Bitbucket
 func (client *Client) GetFiles(repos map[string][]string) (SavedFiles, error) {
 	var allFilesJSON = make(SavedFiles)
 

@@ -49,7 +49,7 @@ var projectsURLPaths = func(projects []string) []string {
 
 const projectsFilePath = "data/projects.json"
 
-// GetProjects get all projects from ***REMOVED*** Bitbucket
+// GetProjects get all projects from Bitbucket
 func (client *Client) GetProjects(projects []string) ([]ProjectModel, error) {
 	var projectJSON SavedProjects
 	if _, err := os.Stat(projectsFilePath); os.IsNotExist(err) {

@@ -6,7 +6,7 @@ var userFlag = cli.StringFlag{
 	Name:     "user, u",
 	Usage:    "Credentials for the bitbucket instance `<username>:<password>`",
 	EnvVar:   "CREDS",
-	FilePath: "./.creds",
+	FilePath: "./.env.creds",
 }
 
 var reposFlag = cli.StringFlag{
@@ -26,7 +26,14 @@ var configFlag = cli.StringFlag{
 	Usage: "Load configuration from `FILE`",
 }
 
+var urlFLag = cli.StringFlag{
+	Name:     "url",
+	Usage:    "`URL` of the bitbucket instance",
+	EnvVar:   "URL",
+	FilePath: "./.env.url",
+}
+
 var cliFlags = []cli.Flag{
-	userFlag,
 	configFlag,
+	urlFLag,
 }
