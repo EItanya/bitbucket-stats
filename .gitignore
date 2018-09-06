@@ -1,0 +1,8 @@
+data
+.token
+*.txt
+debug
+bitbucket
+.DS_Store
+.env
+.creds
