@@ -10,8 +10,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/alexeyco/simpletable"
-
 	"github.com/urfave/cli"
 )
 
@@ -46,27 +44,9 @@ func getProjectsAction(c *cli.Context) error {
 }
 
 func statsAllAction(c *cli.Context) error {
-	totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
-	data := make(stats.TableData, 0)
-	for key, val := range statsCtx.RawFileData {
-		if key != "Other" {
-			data = append(data, stats.TableDatum{key, val, (float64(val) / float64(totalFiles)) * 100})
-			// fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
-		}
-	}
-	table := &stats.Table{
-		Data:  data,
-		Table: simpletable.New(),
-	}
-	table.AddHeader([]string{
-		"FILETYPE",
-		"# OF FILES",
-		"% OF TOTAL",
-	})
-	table.AddFooter([]string{
-		"", fmt.Sprintf("%d", statsCtx.TotalFileCount), "",
-	})
-	table.SetCellsForData(nil)
+	// totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
+	table := &stats.Table{}
+	table.CreateBasicFileTable(statsCtx.RawFileData, statsCtx.TotalFileCount)
 	fmt.Println(table.Table.String())
 	return nil
 }
@@ -80,10 +60,14 @@ func statsReposAction(c *cli.Context) error {
 		if filter != nil && arrays.IndexOfSTR(filter, val.RepoSlug) == -1 {
 			continue
 		}
-		fmt.Printf("(%s:%s)\n", val.ProjectKey, val.RepoSlug)
-		for lang, total := range val.Stats.Data {
-			fmt.Printf("  %s: %d/%d (%.2f%%)\n", lang, total, val.Stats.Total, (float64(total)/float64(val.Stats.Total))*100)
-		}
+		fmt.Printf("\nProject key: (%s)\n", val.ProjectKey)
+		fmt.Printf("Repo slug: (%s)\n", val.RepoSlug)
+		table := &stats.Table{}
+		table.CreateBasicFileTable(val.Stats.Data, val.Stats.Total)
+		fmt.Println(table.Table.String())
+		// for lang, total := range val.Stats.Data {
+		// 	fmt.Printf("  %s: %d/%d (%.2f%%)\n", lang, total, val.Stats.Total, (float64(total)/float64(val.Stats.Total))*100)
+		// }
 	}
 	return nil
 }
@@ -98,10 +82,10 @@ func statsProjectsAction(c *cli.Context) error {
 		if filter != nil && arrays.IndexOfSTR(filter, val.ProjectKey) == -1 {
 			continue
 		}
-		fmt.Printf("(%s)\n", val.ProjectKey)
-		for lang, total := range val.Stats.Data {
-			fmt.Printf("  %s: %d/%d (%.2f%%)\n", lang, total, val.Stats.Total, (float64(total)/float64(val.Stats.Total))*100)
-		}
+		fmt.Printf("\nProject key: (%s)\n", val.ProjectKey)
+		table := &stats.Table{}
+		table.CreateBasicFileTable(val.Stats.Data, val.Stats.Total)
+		fmt.Println(table.Table.String())
 	}
 	return nil
 }

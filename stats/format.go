@@ -18,33 +18,32 @@ type Table struct {
 	Table *simpletable.Table
 }
 
-func defaultTransform(index int, data interface{}) string {
+func buildRow(index int, data interface{}) *simpletable.Cell {
+	cell := &simpletable.Cell{
+		Align: simpletable.AlignLeft,
+	}
 	switch data.(type) {
 	case string:
-		return data.(string)
+		cell.Text = data.(string)
 	case int:
-		return fmt.Sprintf("%d", data.(int))
+		cell.Text = fmt.Sprintf("%d", data.(int))
+		cell.Align = simpletable.AlignRight
 	case float64:
-		return fmt.Sprintf("%.2f", data.(float64))
+		cell.Text = fmt.Sprintf("%.2f%%", data.(float64))
+		cell.Align = simpletable.AlignLeft
 	}
-	return "Bad Data"
+	return cell
 }
 
-func (t *Table) SetCellsForData(transform func(int, interface{}) string) {
+func (t *Table) SetCellsForData(transform func(int, interface{}) *simpletable.Cell) {
 	rows := make([][]*simpletable.Cell, 0)
 	for _, val := range t.Data {
 		row := make([]*simpletable.Cell, 0)
 		for i, data := range val {
 			if transform == nil {
-				row = append(row, &simpletable.Cell{
-					Align: simpletable.AlignLeft,
-					Text:  defaultTransform(i, data),
-				})
+				row = append(row, buildRow(i, data))
 			} else {
-				row = append(row, &simpletable.Cell{
-					Align: simpletable.AlignLeft,
-					Text:  transform(i, data),
-				})
+				row = append(row, transform(i, data))
 			}
 		}
 		rows = append(rows, row)
@@ -80,4 +79,25 @@ func (t *Table) AddFooter(keys []string) {
 
 func (t *Table) addData(data [][]interface{}) {
 
+}
+
+// CreateBasicFileTable creates the generic file table
+func (t *Table) CreateBasicFileTable(lmap languageMap, totalFiles int) {
+	data := make(TableData, 0)
+	for key, val := range lmap {
+		if key != "Other" {
+			data = append(data, TableDatum{key, val, (float64(val) / float64(totalFiles)) * 100})
+		}
+	}
+	t.Data = data
+	t.Table = simpletable.New()
+	t.AddHeader([]string{
+		"FILETYPE",
+		"# OF FILES",
+		"% OF TOTAL",
+	})
+	t.AddFooter([]string{
+		"", fmt.Sprintf("%d", totalFiles), "100%",
+	})
+	t.SetCellsForData(nil)
 }
