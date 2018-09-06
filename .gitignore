@@ -8,3 +8,4 @@ bitbucket
 config.json
 logs
 .vscode
+.cobra*

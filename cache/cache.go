@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"bitbucket/logger"
+	"bitbucket-stats/logger"
 
 	"go.uber.org/zap"
 )

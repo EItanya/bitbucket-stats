@@ -1,9 +1,9 @@
 package stats
 
 import (
-	"bitbucket/api"
-	"bitbucket/logger"
-	"bitbucket/models"
+	"bitbucket-stats/api"
+	"bitbucket-stats/logger"
+	"bitbucket-stats/models"
 	"fmt"
 	"sync"
 )
