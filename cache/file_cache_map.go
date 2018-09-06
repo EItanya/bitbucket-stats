@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -20,6 +21,7 @@ var fileCacheMaps []*fileCacheMap
 func init() {
 	projectsCacheTable = new(fileCacheMap)
 	projectsCacheTable.initialize(defaultDir, projectConst)
+	projectsCacheTable.read()
 	projectsCacheTable.unmarshalEntity = func(c CacheEntity) (interface{}, error) {
 		dat := models.Project{}
 		err := c.Unmarshal(&dat)
@@ -33,6 +35,7 @@ func init() {
 
 	repositoriesCacheTable = new(fileCacheMap)
 	repositoriesCacheTable.initialize(defaultDir, repositoryConst)
+	repositoriesCacheTable.read()
 	repositoriesCacheTable.unmarshalEntity = func(c CacheEntity) (interface{}, error) {
 		dat := models.Repository{}
 		err := c.Unmarshal(&dat)
@@ -46,13 +49,14 @@ func init() {
 
 	filesCacheTable = new(fileCacheMap)
 	filesCacheTable.initialize(defaultDir, filesConst)
+	filesCacheTable.read()
 	filesCacheTable.unmarshalEntity = func(c CacheEntity) (interface{}, error) {
-		dat := models.Files{}
+		dat := models.FilesID{}
 		err := c.Unmarshal(&dat)
 		return dat, err
 	}
 	filesCacheTable.marshalEntity = func(dat interface{}) (CacheEntity, error) {
-		result := &models.Files{}
+		result := &models.FilesID{}
 		err := result.Marshal(dat)
 		return result, err
 	}
@@ -92,7 +96,7 @@ func (t *fileCacheMap) write() error {
 	t.fileMtx.Lock()
 	dataToWrite := make(writtenCacheMapData, 0)
 	dataToWrite.prepareDataForWrite(t.data)
-	byt, err := json.MarshalIndent(dataToWrite, "", "  ")
+	byt, err := json.Marshal(dataToWrite)
 	if err != nil {
 		return err
 	}
@@ -115,6 +119,7 @@ func (t *fileCacheMap) read() error {
 			if err != nil {
 				return err
 			}
+			// var readData interface{}
 			var readData writtenCacheMapData
 			err = json.Unmarshal(byt, &readData)
 			t.data = readData.translateDataFromRead()
@@ -160,27 +165,24 @@ func (t *fileCacheMap) keys() []string {
 	return keys
 }
 
-type writtenCacheMapData []struct {
-	Key   fileCacheKey `json:"key"`
-	Value interface{}  `json:"value"`
-}
+type writtenCacheMapData map[string]interface{}
 
 func (t *writtenCacheMapData) prepareDataForWrite(data fileCacheMapData) {
 	for key, value := range data {
-		*t = append(*t, struct {
-			Key   fileCacheKey `json:"key"`
-			Value interface{}  `json:"value"`
-		}{
-			Key:   key,
-			Value: value,
-		})
+		stringKey := fmt.Sprintf("%s:%s", key.Location, key.Key)
+		(*t)[stringKey] = value
 	}
 }
 
 func (t *writtenCacheMapData) translateDataFromRead() fileCacheMapData {
 	result := make(fileCacheMapData)
-	for _, val := range *t {
-		result[val.Key] = val.Value
+	for key, val := range *t {
+		splitKey := strings.SplitN(key, ":", 2)
+		cacheKey := fileCacheKey{
+			Key:      splitKey[1],
+			Location: splitKey[0],
+		}
+		result[cacheKey] = val
 	}
 	return result
 }

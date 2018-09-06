@@ -147,12 +147,19 @@ func setupClientAction(c *cli.Context) error {
 		Password: splitUsername[1],
 	}
 	forceReset := c.Command.Name == "update"
-	redisCache, err := cache.NewFileCache(nil)
-	if err != nil {
+	var clientCache cache.Cache
+	var cacheError error
+	switch c.GlobalString("cache") {
+	case "file":
+		clientCache, cacheError = cache.NewFileCache(nil)
+	default:
+		clientCache, cacheError = cache.NewRedisCache(nil)
+	}
+	if cacheError != nil {
 		logger.Log.Fatal("Unable to establish connection to cache")
 		return err
 	}
-	client, err = api.Initialize(&user, redisCache, url, forceReset)
+	client, err = api.Initialize(&user, clientCache, url, forceReset)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/mitchellh/mapstructure"
+)
 
 // --------------------------------------
 //
@@ -23,6 +27,12 @@ func (f *Files) Marshal(dat interface{}) error {
 	switch typedData := dat.(type) {
 	case Files:
 		*f = typedData
+	case []interface{}:
+		files := make([]string, len(typedData))
+		for i, v := range typedData {
+			files[i] = fmt.Sprint(v)
+		}
+		*f = files
 	default:
 		return fmt.Errorf("Improper type (%s) was passed into marshal method for Files model", dat)
 	}
@@ -47,6 +57,11 @@ func (f *FilesID) Marshal(dat interface{}) error {
 	switch typedData := dat.(type) {
 	case FilesID:
 		*f = typedData
+	case map[string]interface{}:
+		err := mapstructure.Decode(typedData, f)
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("Improper type (%s) was passed into marshal method for FilesID model", dat)
 	}

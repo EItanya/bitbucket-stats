@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/urfave/cli"
 )
@@ -14,7 +15,7 @@ func init() {
 }
 
 func main() {
-	// start := time.Now()
+	start := time.Now()
 
 	defer logger.Log.Sync()
 	logger.Log.Info("Starting up app")
@@ -37,5 +38,5 @@ func main() {
 	app.Run(os.Args)
 	logger.Log.Info("Program Executed Successfully")
 
-	// fmt.Println(time.Since(start))
+	fmt.Println(time.Since(start))
 }

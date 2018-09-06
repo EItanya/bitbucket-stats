@@ -2,6 +2,8 @@ package models
 
 import (
 	"fmt"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 // --------------------------------------
@@ -32,6 +34,11 @@ func (p *Project) Marshal(dat interface{}) error {
 	switch typedData := dat.(type) {
 	case Project:
 		*p = typedData
+	case map[string]interface{}:
+		err := mapstructure.Decode(typedData, p)
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("Improper type (%s) was passed into marshal method for Project model", dat)
 	}

@@ -20,6 +20,13 @@ var projectsFlag = cli.StringFlag{
 	EnvVar: "PROJECTS",
 }
 
+var cacheFlag = cli.StringFlag{
+	Name:   "cache",
+	Usage:  "Type of cache to be used, `redis` or `file`",
+	EnvVar: "CACHE",
+	Value:  "redis",
+}
+
 var configFlag = cli.StringFlag{
 	Name:   "config, c",
 	Usage:  "Load configuration from `FILE`",
@@ -37,4 +44,5 @@ var cliFlags = []cli.Flag{
 	configFlag,
 	urlFLag,
 	userFlag,
+	cacheFlag,
 }

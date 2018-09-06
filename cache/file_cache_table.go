@@ -83,3 +83,7 @@ type fileCacheTableBasic struct {
 	filename string
 	lastSync time.Time
 }
+
+type fileCacheMetadata struct {
+	Type string `json:"type"`
+}

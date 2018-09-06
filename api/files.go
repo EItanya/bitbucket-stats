@@ -54,7 +54,7 @@ func (client *Client) GetFiles(repos map[string][]string) (*[]models.FilesID, er
 				continue
 			}
 			key := fmt.Sprintf("files:%s:%s", fileList.ProjectKey, fileList.RepoSlug)
-			err = cache.SetCacheValue(client.cache, key, &fileList.Files)
+			err = cache.SetCacheValue(client.cache, key, fileList)
 			if err != nil {
 				return nil, err
 			}

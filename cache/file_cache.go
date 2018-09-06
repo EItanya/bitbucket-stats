@@ -58,7 +58,7 @@ func (c *FileCache) get(keys []string) ([]CacheEntity, error) {
 	}
 
 	results := make([]CacheEntity, len(keys))
-	for _, key := range keys {
+	for index, key := range keys {
 		cacheKey, err := c.translateCacheKey(key)
 		if err != nil {
 			return nil, err
@@ -73,7 +73,7 @@ func (c *FileCache) get(keys []string) ([]CacheEntity, error) {
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, data)
+		results[index] = data
 	}
 	return results, nil
 }

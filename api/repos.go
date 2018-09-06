@@ -61,15 +61,15 @@ func (client *Client) GetRepos(repos []string) (*[]models.Repository, error) {
 		if err != nil {
 			return nil, err
 		}
-		translatedEntities := make([]models.Repository, 0)
-		for _, ce := range entities {
+		translatedEntities := make([]models.Repository, len(entities))
+		for index, ce := range entities {
 			var dat models.Repository
 			err = cache.UnmarshalEntity(ce, &dat)
 			if err != nil {
 				return nil, err
 			}
 			if dat.Slug != "" && dat.Project.Key != "" {
-				translatedEntities = append(translatedEntities, dat)
+				translatedEntities[index] = dat
 			}
 		}
 		results := models.FilterRepos(&translatedEntities, repos)

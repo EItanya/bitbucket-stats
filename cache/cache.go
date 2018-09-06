@@ -114,7 +114,7 @@ func MarshalEntity(ce CacheEntity, dat interface{}) error {
 
 func UnmarshalEntity(ce CacheEntity, dat interface{}) error {
 	if ce == nil {
-		logger.Log.Info("Cache Entity is undefined, skipping Unmarshal from cache entity")
+		logger.Log.Infof("Cache Entity (%+v) is undefined, skipping Unmarshal from cache entity", ce)
 		return nil
 	}
 	err := ce.Unmarshal(dat)

@@ -35,6 +35,11 @@ func (r *RedisCache) set(key string, entity CacheEntity) error {
 			return nil
 		}
 		_, err = r.Conn.Do("SADD", redis.Args{}.Add(key).AddFlat(*typedData)...)
+	case *models.FilesID:
+		if len(typedData.Files) == 0 {
+			return nil
+		}
+		_, err = r.Conn.Do("SADD", redis.Args{}.Add(key).AddFlat(typedData.Files)...)
 	case *models.Project:
 		_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(*typedData)...)
 	case *models.Repository:
