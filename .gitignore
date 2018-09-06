@@ -7,3 +7,4 @@ bitbucket
 .DS_Store
 config.json
 logs
+.vscode
