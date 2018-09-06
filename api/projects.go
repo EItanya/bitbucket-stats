@@ -48,7 +48,7 @@ func (client *Client) GetProjects(projects []string) (*[]models.Project, error) 
 		}
 		bar.Incr()
 		var jsonResp ProjectResponse
-		err = readJSONFromResp(resp, &jsonResp)
+		err = jsonResp.UnmarshalHTTP(resp)
 		if err != nil {
 			return nil, err
 		}

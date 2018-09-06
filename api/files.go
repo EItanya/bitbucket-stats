@@ -107,7 +107,7 @@ func (client *Client) getFilesInternal(r []models.Repository, c chan *models.Fil
 				if err != nil {
 					logger.Log.Fatal(err)
 				}
-				err = readJSONFromResp(resp, &filesJSON)
+				err = filesJSON.UnmarshalHTTP(resp)
 				if err != nil {
 					logger.Log.Fatal(err)
 				}

@@ -2,6 +2,7 @@ package cache
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -9,7 +10,7 @@ import (
 // Type of FileCache
 type FileCache struct {
 	Config *FileCacheConfig
-	Files  map[string]*fileCacheTable
+	Files  map[string]fileCacheTable
 }
 
 // Type of FileCacheConfig
@@ -23,28 +24,43 @@ func (c *FileCache) write(key string, entity CacheEntity) error {
 	if err != nil {
 		return err
 	}
-	splitKey := strings.SplitN(key, ":", 2)
-	if len(splitKey) != 2 {
-		return errors.New("Key is not in the correct format to write to cache")
-	}
-	cacheKey := fileCacheKey{
-		Key:      splitKey[0],
-		Location: splitKey[1],
-	}
-	switch splitKey[0] {
-	case projectConst:
-		err := fileCacheSet(projectsCacheTable, cacheKey, data)
-		if err != nil {
-			return err
-		}
-	case repositoryConst:
-	case filesConst:
-	default:
-		return errors.New("Cache key did not include valid prefix")
-	}
+
+	cacheKey, err := c.translateCacheKey(key)
 	if err != nil {
 		return err
 	}
+
+	cacheTable, err := c.getCacheTable(cacheKey)
+	if err != nil {
+		return err
+	}
+
+	err = fileCacheSet(cacheTable, cacheKey, data)
+	if err != nil {
+		return err
+	}
+	// switch cacheKey.Location {
+	// case projectConst:
+	// 	err := fileCacheSet(projectsCacheTable, cacheKey, data)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// case repositoryConst:
+	// 	err := fileCacheSet(repositoriesCacheTable, cacheKey, data)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// case filesConst:
+	// 	err := fileCacheSet(filesCacheTable, cacheKey, data)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// default:
+	// 	return errors.New("Cache key did not include valid prefix")
+	// }
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -72,5 +88,30 @@ func (c *FileCache) initialize() error {
 		}
 	}
 
+	c.Files = make(map[string]fileCacheTable)
+	c.Files[projectConst] = projectsCacheTable
+	c.Files[repositoryConst] = repositoriesCacheTable
+	c.Files[filesConst] = filesCacheTable
+
 	return nil
+}
+
+func (c *FileCache) getCacheTable(key fileCacheKey) (fileCacheTable, error) {
+	if val, ok := c.Files[key.Location]; ok {
+		return val, nil
+	}
+	return nil, fmt.Errorf("Unable to find cache table for given key location: (%s)", key.Location)
+}
+
+func (c FileCache) translateCacheKey(key string) (fileCacheKey, error) {
+	var cacheKey fileCacheKey
+	splitKey := strings.SplitN(key, ":", 2)
+	if len(splitKey) != 2 {
+		return cacheKey, errors.New("Key is not in the correct format to write to cache")
+	}
+	cacheKey = fileCacheKey{
+		Key:      splitKey[1],
+		Location: splitKey[0],
+	}
+	return cacheKey, nil
 }

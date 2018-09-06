@@ -89,7 +89,7 @@ func (client *Client) getReposInternal(v models.Project, c chan []models.Reposit
 		limit: 500,
 	}
 	resp, _ := client.api.Get(reposURLPath(v.Key), opts)
-	_ = readJSONFromResp(resp, &repoJSON)
+	_ = repoJSON.UnmarshalHTTP(resp)
 	c <- repoJSON.Values
 }
 

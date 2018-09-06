@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"sync"
 )
 
 var projectsCacheTable *fileCacheMap
@@ -15,25 +16,29 @@ var filesCacheTable *fileCacheMap
 var fileCacheMaps []*fileCacheMap
 
 func init() {
-	projectsCacheTable = &fileCacheMap{
-		data: make(fileCacheMapData),
-	}
-	projectsCacheTable.filename = fmt.Sprintf("%s/%s.json", defaultDir, projectConst)
-	projectsCacheTable.title = projectConst
-	repositoriesCacheTable = &fileCacheMap{
-		data: make(fileCacheMapData),
-	}
-	repositoriesCacheTable.filename = fmt.Sprintf("%s/%s.json", defaultDir, repositoryConst)
-	repositoriesCacheTable.title = projectConst
-	filesCacheTable = &fileCacheMap{
-		data: make(fileCacheMapData),
-	}
-	filesCacheTable.filename = fmt.Sprintf("%s/%s.json", defaultDir, filesConst)
-	filesCacheTable.title = projectConst
+	projectsCacheTable = new(fileCacheMap)
+	projectsCacheTable.initialize(defaultDir, projectConst)
+
+	repositoriesCacheTable = new(fileCacheMap)
+	repositoriesCacheTable.initialize(defaultDir, repositoryConst)
+
+	filesCacheTable = new(fileCacheMap)
+	filesCacheTable.initialize(defaultDir, filesConst)
+
 	fileCacheMaps = []*fileCacheMap{
 		projectsCacheTable,
 		repositoriesCacheTable,
 		filesCacheTable,
+	}
+}
+
+func (t *fileCacheMap) initialize(dir, name string) {
+	t.data = make(fileCacheMapData)
+	t.fileCacheTableBasic = &fileCacheTableBasic{
+		filename: fmt.Sprintf("%s/%s.json", dir, name),
+		title:    name,
+		dataMtx:  &sync.RWMutex{},
+		fileMtx:  &sync.RWMutex{},
 	}
 }
 
@@ -43,7 +48,7 @@ type fileCacheMap struct {
 }
 type fileCacheMapData map[fileCacheKey]interface{}
 
-func (t *fileCacheTableBasic) write(data interface{}) error {
+func (t *fileCacheMap) write(data interface{}) error {
 	if t.filename == "" {
 		return errors.New("Filename of Cache Table cannot be null")
 	}
@@ -63,7 +68,7 @@ func (t *fileCacheTableBasic) write(data interface{}) error {
 	return nil
 }
 
-func (t *fileCacheTableBasic) read(data interface{}) error {
+func (t *fileCacheMap) read(data interface{}) error {
 	if t.filename == "" {
 		return errors.New("Filename of Cache Table cannot be null")
 	}
@@ -86,22 +91,17 @@ func (t *fileCacheTableBasic) read(data interface{}) error {
 	return nil
 }
 
-func (t *fileCacheTableBasic) get(key fileCacheKey, currentCacheData map[fileCacheKey]interface{}) (interface{}, error) {
+func (t *fileCacheMap) get(key fileCacheKey) (interface{}, error) {
 	var data interface{}
 	t.dataMtx.RLock()
-	data = currentCacheData[key]
+	data = t.data[key]
 	t.dataMtx.RUnlock()
 	return data, nil
 }
 
-func (t *fileCacheTableBasic) set(key fileCacheKey, currentCacheData, dataToSave interface{}) error {
-	switch typedData := currentCacheData.(type) {
-	case map[fileCacheKey]interface{}:
-		t.dataMtx.Lock()
-		typedData[key] = dataToSave
-		t.dataMtx.Unlock()
-	default:
-		return errors.New("No behavior specified for given data type in cache set")
-	}
+func (t *fileCacheMap) set(key fileCacheKey, dataToSave interface{}) error {
+	t.dataMtx.Lock()
+	t.data[key] = dataToSave
+	t.dataMtx.Unlock()
 	return nil
 }

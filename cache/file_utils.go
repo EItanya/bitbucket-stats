@@ -1,25 +1,50 @@
 package cache
 
 import (
+	"bitbucket/logger"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
-func removeAllLocalData() error {
-	// err := removeLocalFilesData()
-	// if err != nil {
-	// 	return err
-	// }
-	// err := removeLocalReposData()
-	// if err != nil {
-	// 	return err
-	// }
-	// err = removeLocalProjectsData()
-	// if err != nil {
-	// 	return err
-	// }
+func removeAllLocalData(dirname string) error {
+	fileInfo, err := ioutil.ReadDir(dirname)
+	if err != nil && os.IsNotExist(err) {
+		logger.Log.Infof("Directory: (%s) does not exist to be deleted. Trying default directory", dirname)
+		fileInfo, err = ioutil.ReadDir(defaultDir)
+		if err != nil {
+			return err
+		}
+		err = deleteFiles(fileInfo)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		err = deleteFiles(fileInfo)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func deleteFiles(fileInfo []os.FileInfo) error {
+	for _, item := range fileInfo {
+		var deleteErr error
+		if item.IsDir() {
+			deleteErr = os.Remove(item.Name())
+		} else {
+			deleteErr = os.Remove(item.Name())
+		}
+		if deleteErr != nil {
+			return deleteErr
+		}
+	}
 	return nil
 }
 

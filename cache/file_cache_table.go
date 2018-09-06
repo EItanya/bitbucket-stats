@@ -8,12 +8,12 @@ import (
 )
 
 type fileCacheTable interface {
-	get(key fileCacheKey, dat interface{}) error
+	get(key fileCacheKey) (interface{}, error)
 	set(key fileCacheKey, dat interface{}) error
 }
 
-func fileCacheGet(t fileCacheTable, key fileCacheKey, dat interface{}) error {
-	err := t.get(key, &dat)
+func fileCacheGet(t fileCacheTable, key fileCacheKey) (interface{}, error) {
+	dat, err := t.get(key)
 	if err != nil {
 		logger.Log.Infow("Error while attempting to get item from file cache",
 			zap.Error(err),
@@ -21,7 +21,7 @@ func fileCacheGet(t fileCacheTable, key fileCacheKey, dat interface{}) error {
 			zap.Reflect("Data Pointer", dat),
 		)
 	}
-	return err
+	return dat, err
 }
 
 func fileCacheSet(t fileCacheTable, key fileCacheKey, dat interface{}) error {
