@@ -1,7 +1,7 @@
 package api
 
 import (
-	"bitbucket/logger"
+	"bitbucket-stats/logger"
 	"errors"
 	"fmt"
 	"net/http"

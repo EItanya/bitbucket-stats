@@ -1,7 +1,7 @@
 package api
 
 import (
-	"bitbucket/models"
+	"bitbucket-stats/models"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"

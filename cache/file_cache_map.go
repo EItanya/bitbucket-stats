@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"bitbucket/models"
+	"bitbucket-stats/models"
 	"encoding/json"
 	"errors"
 	"fmt"

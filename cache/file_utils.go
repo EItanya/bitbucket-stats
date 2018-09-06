@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"bitbucket/logger"
+	"bitbucket-stats/logger"
 	"encoding/json"
 	"errors"
 	"io/ioutil"

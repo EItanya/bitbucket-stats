@@ -1,7 +1,7 @@
 package stats
 
 import (
-	"bitbucket/models"
+	"bitbucket-stats/models"
 	"strings"
 )
 

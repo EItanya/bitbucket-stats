@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"bitbucket/logger"
-	"bitbucket/models"
+	"bitbucket-stats/logger"
+	"bitbucket-stats/models"
 	"fmt"
 
 	"github.com/gomodule/redigo/redis"

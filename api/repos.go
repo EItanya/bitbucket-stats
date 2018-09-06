@@ -1,9 +1,9 @@
 package api
 
 import (
-	"bitbucket/cache"
-	"bitbucket/logger"
-	"bitbucket/models"
+	"bitbucket-stats/cache"
+	"bitbucket-stats/logger"
+	"bitbucket-stats/models"
 	"errors"
 	"fmt"
 	"os"
