@@ -137,15 +137,17 @@ func (c *Context) ReposWithNodeModules() []string {
 	result := make([]string, 0)
 	for range *c.repos {
 		fileList := <-filesChan
-		wg.Add(1)
-		go func(list []string, projectKey, repoSlug string) {
-			defer wg.Done()
-			if findItem("node_modules", list) {
-				lock.Lock()
-				result = append(result, fmt.Sprintf("%s:%s", projectKey, repoSlug))
-				lock.Unlock()
-			}
-		}(fileList.Files, fileList.ProjectKey, fileList.RepoSlug)
+		if fileList != nil {
+			wg.Add(1)
+			go func(list []string, projectKey, repoSlug string) {
+				defer wg.Done()
+				if findItem("node_modules", list) {
+					lock.Lock()
+					result = append(result, fmt.Sprintf("%s:%s", projectKey, repoSlug))
+					lock.Unlock()
+				}
+			}(fileList.Files, fileList.ProjectKey, fileList.RepoSlug)
+		}
 	}
 	wg.Wait()
 	return result

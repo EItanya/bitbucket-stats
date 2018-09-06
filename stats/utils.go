@@ -98,9 +98,12 @@ func findItem(item string, list []string) bool {
 
 func getFilesByRepoSlug(files *[]models.FilesID, repoSlug string, ch chan *models.FilesID) {
 	var result *models.FilesID
-	for _, val := range *files {
-		if val.RepoSlug == repoSlug {
-			result = &val
+	if repoSlug != "" {
+		for _, val := range *files {
+			if val.RepoSlug == repoSlug {
+				result = &val
+				break
+			}
 		}
 	}
 	ch <- result
