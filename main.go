@@ -1,16 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/urfave/cli"
 )
 
+func init() {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+}
+
 func main() {
 	// start := time.Now()
 	app := cli.NewApp()
+	app.Before = beforeAppSetup
 	app.Flags = cliFlags
 	app.Commands = cliCommands
 
@@ -24,7 +28,7 @@ func main() {
 		}
 	}
 	app.Run(os.Args)
-	fmt.Println("Program Executed Successfully")
+	log.Println("Program Executed Successfully")
 
 	// fmt.Println(time.Since(start))
 }

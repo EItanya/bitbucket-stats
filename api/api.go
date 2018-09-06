@@ -37,7 +37,7 @@ func (api *API) doExt(req *http.Request) (*http.Response, error) {
 	case resp.StatusCode >= 400 && resp.StatusCode <= 499:
 		return resp, authErrors(resp)
 	case resp.StatusCode >= 500:
-		return resp, errors.New("500 error, I don't even know how you managed that")
+		return resp, errors.New("500 error, I don't even know how you managed that\nGive it a couple minutes")
 	default:
 		return resp, err
 	}

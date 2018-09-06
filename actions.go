@@ -3,10 +3,14 @@ package main
 import (
 	"bitbucket/api"
 	"bitbucket/arrays"
+	"bitbucket/gui"
 	"bitbucket/stats"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
+
+	"github.com/alexeyco/simpletable"
 
 	"github.com/urfave/cli"
 )
@@ -43,11 +47,27 @@ func getProjectsAction(c *cli.Context) error {
 
 func statsAllAction(c *cli.Context) error {
 	totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
+	data := make(stats.TableData, 0)
 	for key, val := range statsCtx.RawFileData {
 		if key != "Other" {
-			fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
+			data = append(data, stats.TableDatum{key, val, (float64(val) / float64(totalFiles)) * 100})
+			// fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
 		}
 	}
+	table := &stats.Table{
+		Data:  data,
+		Table: simpletable.New(),
+	}
+	table.AddHeader([]string{
+		"FILETYPE",
+		"# OF FILES",
+		"% OF TOTAL",
+	})
+	table.AddFooter([]string{
+		"", fmt.Sprintf("%d", statsCtx.TotalFileCount), "",
+	})
+	table.SetCellsForData(nil)
+	fmt.Println(table.Table.String())
 	return nil
 }
 
@@ -119,15 +139,21 @@ func beforeStatsAction(c *cli.Context) error {
 	return nil
 }
 
+func guiAction(c *cli.Context) error {
+	p := gui.Context{}
+	p.Initialize()
+	return nil
+}
+
 func checkUserBeforeAction(c *cli.Context) error {
-	if !c.IsSet("user") {
+	if !c.GlobalIsSet("user") {
 		return errUser
 	}
-	if !c.IsSet("url") {
+	if !c.GlobalIsSet("url") {
 		return errURL
 	}
-	splitUsername := strings.Split(c.String("user"), ":")
-	url := strings.Trim(c.String("url"), " \n")
+	splitUsername := strings.Split(c.GlobalString("user"), ":")
+	url := strings.Trim(c.GlobalString("url"), " \n")
 	if len(splitUsername) != 2 {
 		return errors.New("Inputted credentials was not in the proper format. Should be <username>:<password> was " + c.String("user"))
 	} else if url == "" {
@@ -141,12 +167,12 @@ func checkUserBeforeAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("pre-run actions complete")
+	log.Println("pre-run actions complete")
 	return nil
 }
 
 func afterCommandAction(c *cli.Context) error {
-	fmt.Println("Performing post action func")
+	log.Println("Performing post action func")
 	return nil
 }
 

@@ -3,10 +3,9 @@ package main
 import "github.com/urfave/cli"
 
 var userFlag = cli.StringFlag{
-	Name:     "user, u",
-	Usage:    "Credentials for the bitbucket instance `<username>:<password>`",
-	EnvVar:   "CREDS",
-	FilePath: "./.env.creds",
+	Name:   "user, u",
+	Usage:  "Credentials for the bitbucket instance `<username>:<password>`",
+	EnvVar: "CREDS",
 }
 
 var reposFlag = cli.StringFlag{
@@ -22,18 +21,20 @@ var projectsFlag = cli.StringFlag{
 }
 
 var configFlag = cli.StringFlag{
-	Name:  "config, c",
-	Usage: "Load configuration from `FILE`",
+	Name:   "config, c",
+	Usage:  "Load configuration from `FILE`",
+	EnvVar: "CONFIG",
+	Value:  "config.json",
 }
 
 var urlFLag = cli.StringFlag{
-	Name:     "url",
-	Usage:    "`URL` of the bitbucket instance",
-	EnvVar:   "URL",
-	FilePath: "./.env.url",
+	Name:   "url",
+	Usage:  "`URL` of the bitbucket instance",
+	EnvVar: "URL",
 }
 
 var cliFlags = []cli.Flag{
 	configFlag,
 	urlFLag,
+	userFlag,
 }

@@ -6,3 +6,4 @@ bitbucket
 .DS_Store
 .env*
 .creds
+config.json

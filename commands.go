@@ -9,19 +9,21 @@ var getCommand = cli.Command{
 	Aliases:     []string{"do"},
 	Usage:       "bitbucket get",
 	Description: "Gets raw data for bitbucket at supplied instance",
-	Flags: []cli.Flag{
-		userFlag,
-	},
+	// Flags: []cli.Flag{
+	// 	userFlag,
+	// },
 }
 
+// var statsCommandFlags = []cli.Flag{
+// 	userFlag,
+// 	urlFLag,
+// 	configFlag,
+// }
 var statsCommand = cli.Command{
 	Name:        "stats",
 	Usage:       "bitbucket stats",
 	Description: "Gets language stats for bitbucket at supplied instance",
-	Flags: []cli.Flag{
-		userFlag,
-		urlFLag,
-	},
+	// Flags:       statsCommandFlags,
 	Action: statsAllAction,
 	Before: beforeStatsAction,
 	After:  afterCommandAction,
@@ -77,11 +79,26 @@ var updateCommand = cli.Command{
 	Aliases:     []string{"sync", "reload"},
 	Usage:       "bitbucket update",
 	Description: "Sync/Updates remote data",
-	Flags: []cli.Flag{
-		userFlag,
-		urlFLag,
-	},
+	// Flags: []cli.Flag{
+	// 	userFlag,
+	// 	urlFLag,
+	// },
 	Action:       updateAction,
+	Before:       checkUserBeforeAction,
+	After:        afterCommandAction,
+	OnUsageError: onUsageError,
+}
+
+var guiCommand = cli.Command{
+	Name:        "gui",
+	Aliases:     []string{"cli"},
+	Usage:       "bitbucket gui",
+	Description: "Starts the interactive prompt",
+	Action:      guiAction,
+	// Flags: []cli.Flag{
+	// 	userFlag,
+	// 	urlFLag,
+	// },
 	Before:       checkUserBeforeAction,
 	After:        afterCommandAction,
 	OnUsageError: onUsageError,
@@ -91,4 +108,5 @@ var cliCommands = []cli.Command{
 	statsCommand,
 	getCommand,
 	updateCommand,
+	guiCommand,
 }
