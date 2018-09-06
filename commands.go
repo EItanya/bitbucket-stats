@@ -58,6 +58,13 @@ var statsCommand = cli.Command{
 			Description: "Gets language stats for files on bitbucket at ***REMOVED***",
 			Action:      statsAllAction,
 		},
+		{
+			Name:        "node_modules",
+			Usage:       "bitbucket stats node_modules",
+			Aliases:     []string{"n_m"},
+			Description: "Gets repos which contain node_modules (SHAME ON YOU)",
+			Action:      statsNodeModulesAction,
+		},
 	},
 }
 

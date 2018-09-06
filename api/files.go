@@ -12,7 +12,8 @@ type SavedFiles map[string]map[string]FileResponse
 var filesURLPath = func(projKey, repoSlug string) string {
 	return fmt.Sprintf("/projects/%s/repos/%s/files", projKey, repoSlug)
 }
-var filesFilePath = "data/files.json"
+
+const filesFilePath = "data/files.json"
 
 // GetFiles get all repos from ***REMOVED*** Bitbucket
 func (client *Client) GetFiles(repos map[string][]string) (SavedFiles, error) {

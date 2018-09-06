@@ -22,15 +22,6 @@ func mainAction(c *cli.Context) error {
 }
 
 func updateAction(c *cli.Context) error {
-	splitUsername := strings.Split(c.String("user"), ":")
-	user := api.UserInfo{
-		Username: splitUsername[0],
-		Password: splitUsername[1],
-	}
-	client, err := api.Initialize(&user)
-	if err != nil {
-		return err
-	}
 	client.Update()
 	return nil
 }
@@ -62,6 +53,31 @@ func statsAllAction(c *cli.Context) error {
 			fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
 		}
 	}
+	return nil
+}
+
+func statsReposAction(c *cli.Context) error {
+	totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
+	for key, val := range statsCtx.RawFileData {
+		if key != "Other" {
+			fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
+		}
+	}
+	return nil
+}
+
+func statsProjectsAction(c *cli.Context) error {
+	totalFiles := statsCtx.TotalFileCount - statsCtx.RawFileData["Other"]
+	for key, val := range statsCtx.RawFileData {
+		if key != "Other" {
+			fmt.Printf("%s: %d/%d (%.2f%%)\n", key, val, totalFiles, (float64(val)/float64(totalFiles))*100)
+		}
+	}
+	return nil
+}
+
+func statsNodeModulesAction(c *cli.Context) error {
+	fmt.Println(statsCtx.ReposWithNodeModules())
 	return nil
 }
 

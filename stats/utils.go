@@ -82,3 +82,12 @@ func getFiletype(filepath string) (string, bool) {
 
 	return "", false
 }
+
+func findItem(item string, list []string) bool {
+	for _, val := range list {
+		if strings.Contains(val, item) {
+			return true
+		}
+	}
+	return false
+}

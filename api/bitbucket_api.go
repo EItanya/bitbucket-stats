@@ -15,6 +15,10 @@ type Client struct {
 	User UserInfo
 }
 
+func (client *Client) checkUser() error {
+	return nil
+}
+
 // Initialize sets up bitbucket API
 func Initialize(user *UserInfo) (*Client, error) {
 	if user != nil {
@@ -64,6 +68,10 @@ func setupClient(user *UserInfo) (*Client, error) {
 		client := &Client{
 			api:  api,
 			User: *user,
+		}
+		err := client.checkUser()
+		if err != nil {
+			return nil, err
 		}
 		client.checkLocalFiles()
 

@@ -69,3 +69,15 @@ type FileResponse struct {
 	Values []string `json:"values"`
 	Response
 }
+
+// ErrorResponse main JSON Error Response
+type ErrorResponse struct {
+	Errors []ErrorValue `json:"errors"`
+}
+
+// ErrorValue value of errors in Error response
+type ErrorValue struct {
+	Context       interface{} `json:"context"`
+	Message       string      `json:"message"`
+	ExceptionName interface{} `json:"exceptionName"`
+}

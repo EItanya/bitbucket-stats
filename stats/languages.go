@@ -2,6 +2,8 @@ package stats
 
 import (
 	"bitbucket/api"
+	"fmt"
+	"sync"
 )
 
 // Context is the object which holds the counter data for the Context
@@ -108,6 +110,23 @@ func (c *Context) CountFilesByLanguage(langs []string) {
 }
 
 // ReposWithNodeModules by project
-func (c *Context) ReposWithNodeModules() {
-	c.RawFileData = make(languageMap)
+func (c *Context) ReposWithNodeModules() []string {
+	wg := sync.WaitGroup{}
+	lock := sync.Mutex{}
+	result := make([]string, 0)
+	for projectKey, repos := range *c.files {
+		for repoSlug, repoFiles := range repos {
+			wg.Add(1)
+			go func(list []string, projectKey, repoSlug string) {
+				defer wg.Done()
+				if findItem("node_modules", list) {
+					lock.Lock()
+					result = append(result, fmt.Sprintf("%s:%s", projectKey, repoSlug))
+					lock.Unlock()
+				}
+			}(repoFiles.Values, projectKey, repoSlug)
+		}
+	}
+	wg.Wait()
+	return result
 }
