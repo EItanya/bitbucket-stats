@@ -132,26 +132,30 @@ func (c *Context) ReposWithNodeModules() []string {
 }
 
 // GetDataByLanguage gets organized data by language
-func (c *Context) GetDataByLanguage(langs []string) []repoLanguageData {
-	ch := make(chan repoLanguageData)
+func (c *Context) GetDataByLanguage(langs []string) []string {
+	lock := sync.Mutex{}
+	wg := sync.WaitGroup{}
+	result := make([]string, 0)
 	if c.FileDataByRepo == nil {
 		c.CountFilesByRepo()
 	}
 
+	wg.Add(len(c.FileDataByRepo))
 	for _, val := range c.FileDataByRepo {
-		go func(ch chan repoLanguageData, r repoLanguageData, langs []string) {
+		go func(r repoLanguageData, langs []string) {
+			defer wg.Done()
 			for _, inputLang := range langs {
 				for lang := range r.Stats.Data {
 					if inputLang == lang {
-						ch <- r
+						lock.Lock()
+						result = append(result, fmt.Sprintf("%s:%s", r.ProjectKey, r.RepoSlug))
+						lock.Unlock()
 					}
 				}
 			}
-		}(ch, val, langs)
+		}(val, langs)
 	}
-	result := make([]repoLanguageData, 0)
-	for i := 0; i < len(c.FileDataByRepo)*len(langs); i++ {
-		result = append(result, <-ch)
-	}
+	wg.Wait()
+
 	return result
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -17,17 +16,10 @@ func main() {
 	app.Name = "Bitbucket Stats"
 	app.Usage = "Gather bitbucket stats"
 	app.Action = mainAction
-	app.OnUsageError = func(c *cli.Context, err error, isSubcommand bool) error {
-		if isSubcommand {
-			return err
-		}
-
-		fmt.Printf("Error occurred: %#v\n", err)
-		return nil
-	}
+	app.OnUsageError = onUsageError
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	// fmt.Println(time.Since(start))

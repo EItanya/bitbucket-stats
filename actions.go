@@ -24,8 +24,7 @@ func mainAction(c *cli.Context) error {
 }
 
 func updateAction(c *cli.Context) error {
-	client.Update()
-	return nil
+	return client.Update()
 }
 
 func getAllAction(c *cli.Context) error {
@@ -99,8 +98,8 @@ func statsNodeModulesAction(c *cli.Context) error {
 }
 
 func statsLangAction(c *cli.Context) error {
-	for _, val := range statsCtx.GetDataByLanguage([]string{"go"}) {
-		fmt.Println(*val)
+	for _, val := range statsCtx.GetDataByLanguage([]string{"GO"}) {
+		fmt.Println(val)
 	}
 	return nil
 }

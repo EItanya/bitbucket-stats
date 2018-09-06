@@ -74,6 +74,7 @@ var statsCommand = cli.Command{
 			Action:      statsNodeModulesAction,
 		},
 	},
+	OnUsageError: onUsageError,
 }
 
 var updateCommand = cli.Command{
@@ -91,6 +92,7 @@ var updateCommand = cli.Command{
 		fmt.Println("Finished syncing/updating data")
 		return nil
 	},
+	OnUsageError: onUsageError,
 }
 
 var cliCommands = []cli.Command{
