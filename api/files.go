@@ -1,33 +1,31 @@
 package api
 
 import (
+	"bitbucket/cache"
 	"bitbucket/models"
+	"errors"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/gosuri/uiprogress"
 )
-
-// SavedFiles is the format by which files are saved
-type SavedFiles map[string]map[string]FileResponse
 
 var filesURLPath = func(projKey, repoSlug string) string {
 	return fmt.Sprintf("/projects/%s/repos/%s/files", projKey, repoSlug)
 }
 
-const filesFilePath = "data/files.json"
-
 // GetFiles get all repos from Bitbucket
-func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
-	var allFilesJSON = make(SavedFiles)
+func (client *Client) GetFiles(repos map[string][]string) (*[]models.FilesID, error) {
 
-	if _, err := os.Stat(filesFilePath); os.IsNotExist(err) {
-		var fileChan = make(chan SavedFiles)
-		reposJSON, err := getReposJSON()
+	if present, err := cache.CheckCache(client.cache, cache.AllFilesConst); !present && err == nil {
+		var fileChan = make(chan *models.FilesID)
+		reposJSONPtr, err := client.GetRepos(make([]string, 0))
+		reposJSON := *reposJSONPtr
 		if err != nil {
 			return nil, err
 		}
+
+		fileListResults := make([]models.FilesID, len(reposJSON))
 		numRepos := len(reposJSON)
 		bar := uiprogress.AddBar(numRepos + 1)
 		bar.AppendCompleted()
@@ -50,71 +48,83 @@ func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 			go client.getFilesInternal(r, fileChan)
 		}
 		for range reposJSON {
-			keyedFileList := <-fileChan
-			bar.Incr()
-			for projectKey, value := range keyedFileList {
-				project, repoExists := allFilesJSON[projectKey]
-				if repoExists {
-					for repoSlug, value1 := range value {
-						project[repoSlug] = value1
-						allFilesJSON[projectKey] = project
-					}
-				} else {
-					allFilesJSON[projectKey] = value
-				}
+			fileList := <-fileChan
+			if fileList == nil {
+				continue
 			}
-		}
-		err = writeJSONToFile(&allFilesJSON, filesFilePath)
-		if err != nil {
-			return nil, err
+			bar.Incr()
+			re := &cache.RedisEntity{}
+			err = cache.MarshalEntity(re, fileList.Files)
+			key := fmt.Sprintf("files:%s:%s", fileList.ProjectKey, fileList.RepoSlug)
+			err = cache.SaveToCache(client.cache, key, re)
+			if err != nil {
+				return nil, err
+			}
+			fileListResults = append(fileListResults, *fileList)
 		}
 		bar.Incr()
-	} else {
-		err := readJSONFromFile(filesFilePath, &allFilesJSON)
+		return &fileListResults, nil
+	} else if present && err == nil {
+		entities, err := cache.ReadFromCache(client.cache, []string{cache.AllFilesConst})
 		if err != nil {
 			return nil, err
 		}
+		translatedEntities := make([]models.FilesID, 0)
+		for _, ce := range entities {
+			var dat models.FilesID
+			if ce == nil {
+				continue
+			}
+			err = cache.UnmarshalEntity(ce, &dat)
+			if err != nil {
+				return nil, err
+			}
+			translatedEntities = append(translatedEntities, dat)
+		}
+		// results := models.FilterFiles(&translatedEntities, repos)
+		return &translatedEntities, nil
 	}
-
-	return &allFilesJSON, nil
+	log.Println(errors.New("Reached end of GetFiles function with no data, check logic"))
+	return nil, nil
 }
 
-func (client *Client) getFilesInternal(r []models.Repository, c chan SavedFiles) {
+func (client *Client) getFilesInternal(r []models.Repository, c chan *models.FilesID) {
 	for _, v3 := range r {
-		var collector FileResponse
-		nextPageStart := 0
-		for {
-			var filesJSON FileResponse
-			opts := urlOptions{
-				limit: 1000,
+		var repoFiles models.FilesID
+		// Make sure both keys are set
+		if v3.Project.Key != "" && v3.Slug != "" {
+			var collector FileResponse
+			nextPageStart := 0
+			for {
+				var filesJSON FileResponse
+				opts := urlOptions{
+					limit: 1000,
+				}
+				if nextPageStart > 0 {
+					opts.start = nextPageStart
+				}
+				resp, err := client.api.Get(filesURLPath(v3.Project.Key, v3.Slug), opts)
+				if err != nil {
+					log.Fatal(err)
+				}
+				err = readJSONFromResp(resp, &filesJSON)
+				if err != nil {
+					log.Fatal(err)
+				}
+				collector.Values = append(collector.Values, filesJSON.Values...)
+				if filesJSON.IsLastPage {
+					break
+				}
+				nextPageStart = filesJSON.NextPageStart
 			}
-			if nextPageStart > 0 {
-				opts.start = nextPageStart
+
+			repoFiles = models.FilesID{
+				ProjectKey: v3.Project.Key,
+				RepoSlug:   v3.Slug,
+				Files:      collector.Values,
 			}
-			resp, err := client.api.Get(filesURLPath(v3.Project.Key, v3.Slug), opts)
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = readJSONFromResp(resp, &filesJSON)
-			if err != nil {
-				log.Fatal(err)
-			}
-			collector.Values = append(collector.Values, filesJSON.Values...)
-			if filesJSON.IsLastPage {
-				break
-			}
-			nextPageStart = filesJSON.NextPageStart
 		}
 
-		repoFiles := SavedFiles{
-			v3.Project.Key: {
-				v3.Slug: collector,
-			},
-		}
-		c <- repoFiles
+		c <- &repoFiles
 	}
-}
-
-func removeLocalFilesData() error {
-	return os.Remove(filesFilePath)
 }

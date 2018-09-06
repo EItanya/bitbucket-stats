@@ -24,7 +24,12 @@ func errorFormatter(err ErrorValue) string {
 func authErrors(resp *http.Response) error {
 	if contentTypeArr, ok := resp.Header["Content-Type"]; ok && len(contentTypeArr) > 0 {
 		if contentType := contentTypeArr[0]; !strings.Contains(contentType, "application/json") {
-			return fmt.Errorf("%d Error\n  Data received was not Json therefore not translated \n  This is most likely due to a bad URL", resp.StatusCode)
+			err := []string{
+				fmt.Sprintf("%d Error\nURL: %s\n", resp.StatusCode, resp.Request.URL),
+				"Data received was not Json therefore not translated \n",
+				"This is most likely due to a bad URL",
+			}
+			return errors.New(strings.Join(err, ""))
 		}
 		byt, err := ioutil.ReadAll(resp.Body)
 		errorJSON := ErrorResponse{}

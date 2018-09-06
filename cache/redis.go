@@ -33,10 +33,22 @@ func (r *RedisCache) write(key string, entity CacheEntity) error {
 		return err
 	}
 	switch typedData := data.(type) {
-	case []interface{}:
+	case models.Files:
+		if len(typedData) == 0 {
+			return nil
+		}
 		_, err = r.Conn.Do("SADD", redis.Args{}.Add(key).AddFlat(typedData)...)
-	case interface{}:
+	case models.Project:
 		_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(typedData)...)
+	case models.Repository:
+		rrm := redisRepositoryModel{}
+		rrm.initializeRedisRepoModel(typedData)
+		_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(rrm)...)
+
+	// case []interface{}:
+	// 	_, err = r.Conn.Do("SADD", redis.Args{}.Add(key).AddFlat(typedData)...)
+	// case interface{}:
+	// 	_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(typedData)...)
 	default:
 		return errors.New("Redis does not support saving of data type passed in")
 	}
@@ -51,53 +63,56 @@ func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
 	if len(keys) == 1 {
 		key := keys[0]
 		if key == AllProjectConst || key == AllRepositoryConst || key == AllFilesConst {
-			keyParam := fmt.Sprintf("%s*", key[4:len(key)])
-			values, err := redis.Values(r.Conn.Do("KEYS", redis.Args{}.Add(keyParam)...))
-			if err != nil {
-				return results, err
-			}
-			keysPointer := make([]string, len(values))
-			err = redis.ScanSlice(values, &keysPointer)
+			keysPointer, err := r.getKeys(key)
 			if err != nil {
 				return nil, err
 			}
 			keys = keysPointer
 		}
-
 	}
 	for _, key := range keys {
 		if splitKey := strings.Split(key, ":"); len(splitKey) > 0 {
 			lookupType := splitKey[0]
 			re := &RedisEntity{}
-			resp, err := r.Conn.Do("HGETALL", redis.Args{}.Add(key)...)
-			if err != nil {
-				log.Println(err)
-				return nil, err
-			}
-			values, err := redis.Values(resp, nil)
-			if err != nil {
-				log.Println(err)
-				return nil, err
-			}
 			switch lookupType {
-			case "project":
-				var dat models.Project
-				if err = redis.ScanStruct(values, &dat); err != nil {
-					return nil, err
+			case "project", "repository":
+				values, err := r.getValues("HGETALL", key)
+				if lookupType == "project" {
+					var dat models.Project
+					if err = redis.ScanStruct(values, &dat); err != nil {
+						return nil, err
+					}
+					re.marshal(dat)
+				} else {
+					var dat redisRepositoryModel
+					if err = redis.ScanStruct(values, &dat); err != nil {
+						return nil, err
+					}
+					pm, _ := r.getProject(dat.Project)
+					rm := dat.revertToRepositoryModel(*pm)
+					re.marshal(rm)
 				}
-				re.marshal(dat)
-			case "repository":
-				var dat models.Repository
-				if err = redis.ScanStruct(values, &dat); err != nil {
-					return nil, err
-				}
-				re.marshal(dat)
 			case "files":
-				var dat models.Files
-				if err = redis.ScanStruct(values, &dat); err != nil {
+				resp, err := r.Conn.Do("SMEMBERS", redis.Args{}.Add(key)...)
+				if err != nil {
+					log.Println(err)
 					return nil, err
 				}
-				re.marshal(dat)
+				values, err := redis.Values(resp, nil)
+				if err != nil {
+					log.Println(err)
+					return nil, err
+				}
+				var dat models.Files
+				if err = redis.ScanSlice(values, &dat); err != nil {
+					return nil, err
+				}
+				extFiles := models.FilesID{
+					Files:      dat,
+					ProjectKey: splitKey[1],
+					RepoSlug:   splitKey[2],
+				}
+				re.marshal(extFiles)
 			}
 			results = append(results, re)
 
@@ -109,8 +124,22 @@ func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
 	return results, nil
 }
 
+func (r *RedisCache) check(keyGroup string) (bool, error) {
+	if keyGroup == AllFilesConst || keyGroup == AllProjectConst || keyGroup == AllRepositoryConst {
+		keys, err := r.getKeys(keyGroup)
+		if err != nil {
+			return false, err
+		}
+		if len(keys) > 0 {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (r *RedisCache) clear() error {
-	return r.Conn.Flush()
+	_, err := r.Conn.Do("FLUSHDB")
+	return err
 }
 
 func (r *RedisCache) initialize() error {
@@ -129,4 +158,19 @@ func (r *RedisCache) initialize() error {
 	}
 	r.Conn = conn
 	return nil
+}
+
+func (r *RedisCache) getKeys(key string) ([]string, error) {
+	keys := make([]string, 0)
+	keyParam := fmt.Sprintf("%s*", key[4:len(key)])
+	values, err := redis.Values(r.Conn.Do("KEYS", redis.Args{}.Add(keyParam)...))
+	if err != nil {
+		return nil, err
+	}
+
+	err = redis.ScanSlice(values, &keys)
+	if err != nil {
+		return nil, err
+	}
+	return keys, err
 }

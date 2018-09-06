@@ -9,11 +9,11 @@ import (
 )
 
 func removeAllLocalData() error {
-	err := removeLocalFilesData()
-	if err != nil {
-		return err
-	}
-	err = removeLocalReposData()
+	// err := removeLocalFilesData()
+	// if err != nil {
+	// 	return err
+	// }
+	err := removeLocalReposData()
 	if err != nil {
 		return err
 	}
@@ -60,16 +60,4 @@ func readJSONFromResp(resp *http.Response, dat interface{}) error {
 		return err
 	}
 	return json.Unmarshal(byt, &dat)
-}
-
-func getProjectsJSON() (SavedProjects, error) {
-	var projectJSON SavedProjects
-	err := readJSONFromFile(projectsFilePath, &projectJSON)
-	return projectJSON, err
-}
-
-func getReposJSON() (SavedRepos, error) {
-	var repoJSON SavedRepos
-	err := readJSONFromFile(reposFilePath, &repoJSON)
-	return repoJSON, err
 }

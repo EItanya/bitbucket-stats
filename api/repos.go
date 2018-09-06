@@ -1,41 +1,15 @@
 package api
 
 import (
+	"bitbucket/cache"
 	"bitbucket/models"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/gosuri/uiprogress"
 )
-
-// SavedRepos is the format by which repos are saved
-type SavedRepos []models.Repository
-
-// Filter is the function to filter repos
-func (data SavedRepos) Filter(repos []string) []models.Repository {
-	if len(repos) == 0 {
-		return data
-	}
-	filteredRepos := make([]models.Repository, 0)
-	ch := make(chan []models.Repository)
-	for _, val := range repos {
-		go data.filterRepos(val, data, ch)
-	}
-	for range repos {
-		filteredRepos = append(filteredRepos, <-ch...)
-	}
-	return filteredRepos
-
-}
-func (data SavedRepos) filterRepos(val string, r []models.Repository, ch chan []models.Repository) {
-	rm := make([]models.Repository, 0)
-	for _, v := range r {
-		if v.Slug == val {
-			rm = append(rm, v)
-		}
-	}
-	ch <- rm
-}
 
 var reposURLPath = func(projKey string) string {
 	return fmt.Sprintf("/projects/%s/repos", projKey)
@@ -45,14 +19,15 @@ const reposFilePath = "data/repos.json"
 
 // GetRepos get all repos from Bitbucket
 func (client *Client) GetRepos(repos []string) (*[]models.Repository, error) {
-	var reposJSON SavedRepos
+	var reposJSON []models.Repository
 	var repoChan = make(chan []models.Repository)
-	if _, err := os.Stat(reposFilePath); os.IsNotExist(err) {
-		projectJSON, err := getProjectsJSON()
+
+	if present, err := cache.CheckCache(client.cache, cache.AllRepositoryConst); !present && err == nil {
+		projectJSON, err := client.GetProjects(make([]string, 0))
 		if err != nil {
 			return nil, err
 		}
-		numProjects := len(projectJSON.Values)
+		numProjects := len(*projectJSON)
 		bar := uiprogress.AddBar(numProjects + 1)
 		bar.AppendCompleted()
 		bar.PrependFunc(prependFormatFunc(func(b *uiprogress.Bar) string {
@@ -63,26 +38,47 @@ func (client *Client) GetRepos(repos []string) (*[]models.Repository, error) {
 			}
 			return "Dowloading repo data"
 		}))
-		for _, v := range projectJSON.Values {
+		for _, v := range *projectJSON {
 			go client.getReposInternal(v, repoChan)
 		}
-		for range projectJSON.Values {
+		for range *projectJSON {
 			reposJSON = append(reposJSON, <-repoChan...)
 			bar.Incr()
 		}
-		err = writeJSONToFile(&reposJSON, reposFilePath)
-		if err != nil {
-			return nil, err
+
+		for _, v := range reposJSON {
+			re := &cache.RedisEntity{}
+			err = cache.MarshalEntity(re, v)
+			key := fmt.Sprintf("repository:%s", v.Slug)
+			err = cache.SaveToCache(client.cache, key, re)
+			if err != nil {
+				return nil, err
+			}
 		}
 		bar.Incr()
-	} else {
-		err := readJSONFromFile(reposFilePath, &reposJSON)
+		result := models.FilterRepos(&reposJSON, repos)
+		return &result, nil
+	} else if present && err == nil {
+		entities, err := cache.ReadFromCache(client.cache, []string{cache.AllRepositoryConst})
 		if err != nil {
 			return nil, err
 		}
+		translatedEntities := make([]models.Repository, 0)
+		for _, ce := range entities {
+			var dat models.Repository
+			err = cache.UnmarshalEntity(ce, &dat)
+			if err != nil {
+				return nil, err
+			}
+			translatedEntities = append(translatedEntities, dat)
+		}
+		results := models.FilterRepos(&translatedEntities, repos)
+		return &results, nil
+	} else if err != nil {
+		log.Println(err)
+		return nil, err
 	}
-	result := reposJSON.Filter(repos)
-	return &result, nil
+	return nil, errors.New("Reached end of GetRepos function with no data, check logic")
 }
 
 func (client *Client) getReposInternal(v models.Project, c chan []models.Repository) {

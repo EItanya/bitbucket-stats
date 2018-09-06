@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -13,6 +14,13 @@ func init() {
 
 func main() {
 	// start := time.Now()
+	f, err := os.OpenFile("debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+	log.Println("Starting up app")
 
 	app := cli.NewApp()
 	app.Before = beforeAppSetup
@@ -22,10 +30,11 @@ func main() {
 	app.Name = "Bitbucket Stats"
 	app.Usage = "Gather bitbucket stats"
 	app.Action = mainAction
-	// app.OnUsageError = onUsageError
+	app.OnUsageError = onUsageError
 	app.ExitErrHandler = func(c *cli.Context, err error) {
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Println(err)
+			log.Fatalln("Program Error out")
 		}
 	}
 	app.Run(os.Args)

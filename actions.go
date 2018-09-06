@@ -3,6 +3,7 @@ package main
 import (
 	"bitbucket/api"
 	"bitbucket/arrays"
+	"bitbucket/cache"
 	"bitbucket/gui"
 	"bitbucket/stats"
 	"errors"
@@ -105,7 +106,7 @@ func statsLangAction(c *cli.Context) error {
 }
 
 func beforeStatsAction(c *cli.Context) error {
-	err = checkUserBeforeAction(c)
+	err = setupClientAction(c)
 	if err != nil {
 		return err
 	}
@@ -127,7 +128,7 @@ func guiAction(c *cli.Context) error {
 	return nil
 }
 
-func checkUserBeforeAction(c *cli.Context) error {
+func setupClientAction(c *cli.Context) error {
 	if !c.GlobalIsSet("user") {
 		return errUser
 	}
@@ -146,7 +147,15 @@ func checkUserBeforeAction(c *cli.Context) error {
 		Password: splitUsername[1],
 	}
 	forceReset := c.Command.Name == "update"
-	client, err = api.Initialize(&user, url, forceReset)
+	redisCache, err := cache.NewRedisCache(cache.RedisConfig{
+		Port:     "6379",
+		Protocol: "tcp",
+	})
+	if err != nil {
+		log.Fatalln("Unable to establish connection to cache")
+		return err
+	}
+	client, err = api.Initialize(&user, redisCache, url, forceReset)
 	if err != nil {
 		return err
 	}

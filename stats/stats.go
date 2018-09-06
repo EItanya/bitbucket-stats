@@ -1,24 +1,24 @@
 package stats
 
 import (
-	"bitbucket/api"
+	"bitbucket/models"
 	"sync"
 )
 
 // Projects base type for projects/project stats
 type Projects struct {
-	data api.SavedProjects
+	data []models.Project
 	sync.Mutex
 }
 
 // Repositories base type for repo/repo stats
 type Repositories struct {
-	data api.SavedRepos
+	data []models.Repository
 	sync.Mutex
 }
 
 // Files base type for file/file stats
 type Files struct {
-	data api.SavedRepos
+	data []string
 	sync.Mutex
 }

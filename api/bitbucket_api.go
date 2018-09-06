@@ -1,10 +1,10 @@
 package api
 
 import (
+	"bitbucket/cache"
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/gosuri/uiprogress"
@@ -12,8 +12,9 @@ import (
 
 // Client basic type of bitbucket api client
 type Client struct {
-	api  *API
-	User UserInfo
+	api   *API
+	cache cache.Cache
+	User  UserInfo
 }
 
 func (client *Client) checkUser() error {
@@ -26,10 +27,16 @@ func (client *Client) Update() error {
 	if client.api == nil {
 		return errors.New("Must initialize client before attempting any retrievals")
 	}
+	if client.cache == nil {
+		return errors.New("Must initialize cache before attempting update")
+	}
 	log.Println("Clearing data cache")
-	err := removeAllLocalData()
+	err := cache.ClearCache(client.cache)
+	if err != nil {
+		log.Println("Error while clearing cache\n Repopulation might be slightly incorrect, rerun for assurance")
+	}
 	log.Println("Data cache cleared successfully, Beginning download")
-	fmt.Println("Downloading data to cache")
+	log.Println("Downloading data to cache")
 	if err != nil && !strings.Contains(err.Error(), "no such file or directory") {
 		fmt.Println(err.Error())
 		return err
@@ -51,15 +58,16 @@ func (client *Client) Update() error {
 	return nil
 }
 
-func Initialize(user *UserInfo, url string, forceReset bool) (*Client, error) {
+func Initialize(user *UserInfo, cache cache.Cache, url string, forceReset bool) (*Client, error) {
 	if user.Username != "" && user.Password != "" {
 		api := &API{
 			BaseURL: url,
 			user:    *user,
 		}
 		client := &Client{
-			api:  api,
-			User: *user,
+			api:   api,
+			cache: cache,
+			User:  *user,
 		}
 		err := client.checkUser()
 		if err != nil {
@@ -70,9 +78,10 @@ func Initialize(user *UserInfo, url string, forceReset bool) (*Client, error) {
 			if err != nil {
 				return nil, err
 			}
-		} else {
-			client.checkLocalFiles()
 		}
+		// else {
+		// 	client.checkLocalFiles()
+		// }
 
 		// api.Timeout = 15 * time.Second
 		return client, nil
@@ -81,18 +90,18 @@ func Initialize(user *UserInfo, url string, forceReset bool) (*Client, error) {
 	return nil, err
 }
 
-func (client *Client) checkLocalFiles() {
-	errs := make([]error, 0)
-	_, err := os.Stat(projectsFilePath)
-	errs = append(errs, err)
-	_, err = os.Stat(reposFilePath)
-	errs = append(errs, err)
-	_, err = os.Stat(filesFilePath)
-	errs = append(errs, err)
-	for _, e := range errs {
-		if e != nil && os.IsNotExist(e) {
-			client.Update()
-			break
-		}
-	}
-}
+// func (client *Client) checkLocalFiles() {
+// 	errs := make([]error, 0)
+// 	_, err := os.Stat(projectsFilePath)
+// 	errs = append(errs, err)
+// 	_, err = os.Stat(reposFilePath)
+// 	errs = append(errs, err)
+// 	_, err = os.Stat(filesFilePath)
+// 	errs = append(errs, err)
+// 	for _, e := range errs {
+// 		if e != nil && os.IsNotExist(e) {
+// 			client.Update()
+// 			break
+// 		}
+// 	}
+// }

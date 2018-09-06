@@ -76,7 +76,7 @@ var updateCommand = cli.Command{
 	Usage:       "bitbucket update",
 	Description: "Sync/Updates remote data",
 	Action:      updateAction,
-	Before:      checkUserBeforeAction,
+	Before:      setupClientAction,
 	After:       afterCommandAction,
 }
 
@@ -86,7 +86,7 @@ var guiCommand = cli.Command{
 	Usage:       "bitbucket gui",
 	Description: "Starts the interactive prompt",
 	Action:      guiAction,
-	Before:      checkUserBeforeAction,
+	Before:      setupClientAction,
 	After:       afterCommandAction,
 }
 

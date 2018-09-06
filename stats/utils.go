@@ -95,3 +95,13 @@ func findItem(item string, list []string) bool {
 	}
 	return false
 }
+
+func getFilesByRepoSlug(files *[]models.FilesID, repoSlug string, ch chan *models.FilesID) {
+	var result *models.FilesID
+	for _, val := range *files {
+		if val.RepoSlug == repoSlug {
+			result = &val
+		}
+	}
+	ch <- result
+}

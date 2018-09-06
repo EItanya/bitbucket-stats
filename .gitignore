@@ -1,9 +1,8 @@
 data
 .token
 *.txt
+*.log
 debug
 bitbucket
 .DS_Store
-.env*
-.creds
 config.json
