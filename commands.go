@@ -107,7 +107,7 @@ var guiCommand = cli.Command{
 // 			return err
 // 		}
 // 		n, err := redisCache.Conn.Do("INCR", "counter")
-// 		log.Println(n)
+// 		logger.Log.Info(n)
 // 		return err
 // 	},
 // }

@@ -5,10 +5,10 @@ import (
 	"bitbucket/arrays"
 	"bitbucket/cache"
 	"bitbucket/gui"
+	"bitbucket/logger"
 	"bitbucket/stats"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/urfave/cli"
@@ -152,19 +152,19 @@ func setupClientAction(c *cli.Context) error {
 		Protocol: "tcp",
 	})
 	if err != nil {
-		log.Fatalln("Unable to establish connection to cache")
+		logger.Log.Fatal("Unable to establish connection to cache")
 		return err
 	}
 	client, err = api.Initialize(&user, redisCache, url, forceReset)
 	if err != nil {
 		return err
 	}
-	log.Println("pre-run actions complete")
+	logger.Log.Info("pre-run actions complete")
 	return nil
 }
 
 func afterCommandAction(c *cli.Context) error {
-	log.Println("Performing post action func")
+	logger.Log.Info("Performing post action func")
 	return nil
 }
 

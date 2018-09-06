@@ -12,9 +12,9 @@ To use this tool follow these steps:
 
 ```json
 {
-  "url": "https://***REMOVED***/rest/api/1.0",
-  "username": <username>,
-  "password": <password>
+  "url": "https://<bitbucket.instance.url>/rest/api/1.0",
+  "username": "<username>",
+  "password": "<password>"
 }
 ```
 

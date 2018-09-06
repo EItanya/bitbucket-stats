@@ -2,9 +2,9 @@ package api
 
 import (
 	"bitbucket/cache"
+	"bitbucket/logger"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/gosuri/uiprogress"
@@ -30,13 +30,13 @@ func (client *Client) Update() error {
 	if client.cache == nil {
 		return errors.New("Must initialize cache before attempting update")
 	}
-	log.Println("Clearing data cache")
+	logger.Log.Info("Clearing data cache")
 	err := cache.ClearCache(client.cache)
 	if err != nil {
-		log.Println("Error while clearing cache\n Repopulation might be slightly incorrect, rerun for assurance")
+		logger.Log.Info("Error while clearing cache\n Repopulation might be slightly incorrect, rerun for assurance")
 	}
-	log.Println("Data cache cleared successfully, Beginning download")
-	log.Println("Downloading data to cache")
+	logger.Log.Info("Data cache cleared successfully, Beginning download")
+	logger.Log.Info("Downloading data to cache")
 	if err != nil && !strings.Contains(err.Error(), "no such file or directory") {
 		fmt.Println(err.Error())
 		return err

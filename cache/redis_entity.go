@@ -37,6 +37,10 @@ func (re *RedisEntity) marshal(dat interface{}) error {
 		re.RawData = typedData
 	case models.FilesID:
 		re.RawData = typedData
+	case models.Files:
+		re.RawData = typedData
+	case []string:
+		re.RawData = typedData
 	case int:
 		re.RawData = typedData
 	case float64:

@@ -2,10 +2,10 @@ package api
 
 import (
 	"bitbucket/cache"
+	"bitbucket/logger"
 	"bitbucket/models"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/gosuri/uiprogress"
@@ -70,12 +70,14 @@ func (client *Client) GetRepos(repos []string) (*[]models.Repository, error) {
 			if err != nil {
 				return nil, err
 			}
-			translatedEntities = append(translatedEntities, dat)
+			if dat.Slug != "" && dat.Project.Key != "" {
+				translatedEntities = append(translatedEntities, dat)
+			}
 		}
 		results := models.FilterRepos(&translatedEntities, repos)
 		return &results, nil
 	} else if err != nil {
-		log.Println(err)
+		logger.Log.Info(err)
 		return nil, err
 	}
 	return nil, errors.New("Reached end of GetRepos function with no data, check logic")

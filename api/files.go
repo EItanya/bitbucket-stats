@@ -2,10 +2,10 @@ package api
 
 import (
 	"bitbucket/cache"
+	"bitbucket/logger"
 	"bitbucket/models"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/gosuri/uiprogress"
 )
@@ -49,10 +49,10 @@ func (client *Client) GetFiles(repos map[string][]string) (*[]models.FilesID, er
 		}
 		for range reposJSON {
 			fileList := <-fileChan
-			if fileList == nil {
+			bar.Incr()
+			if fileList == nil || len(fileList.Files) == 0 {
 				continue
 			}
-			bar.Incr()
 			re := &cache.RedisEntity{}
 			err = cache.MarshalEntity(re, fileList.Files)
 			key := fmt.Sprintf("files:%s:%s", fileList.ProjectKey, fileList.RepoSlug)
@@ -84,7 +84,7 @@ func (client *Client) GetFiles(repos map[string][]string) (*[]models.FilesID, er
 		// results := models.FilterFiles(&translatedEntities, repos)
 		return &translatedEntities, nil
 	}
-	log.Println(errors.New("Reached end of GetFiles function with no data, check logic"))
+	logger.Log.Info(errors.New("Reached end of GetFiles function with no data, check logic"))
 	return nil, nil
 }
 
@@ -105,11 +105,11 @@ func (client *Client) getFilesInternal(r []models.Repository, c chan *models.Fil
 				}
 				resp, err := client.api.Get(filesURLPath(v3.Project.Key, v3.Slug), opts)
 				if err != nil {
-					log.Fatal(err)
+					logger.Log.Fatal(err)
 				}
 				err = readJSONFromResp(resp, &filesJSON)
 				if err != nil {
-					log.Fatal(err)
+					logger.Log.Fatal(err)
 				}
 				collector.Values = append(collector.Values, filesJSON.Values...)
 				if filesJSON.IsLastPage {

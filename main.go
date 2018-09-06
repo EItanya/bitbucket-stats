@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bitbucket/logger"
 	"fmt"
 	"log"
 	"os"
@@ -14,13 +15,9 @@ func init() {
 
 func main() {
 	// start := time.Now()
-	f, err := os.OpenFile("debug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-	log.SetOutput(f)
-	log.Println("Starting up app")
+
+	defer logger.Log.Sync()
+	logger.Log.Info("Starting up app")
 
 	app := cli.NewApp()
 	app.Before = beforeAppSetup
@@ -34,11 +31,11 @@ func main() {
 	app.ExitErrHandler = func(c *cli.Context, err error) {
 		if err != nil {
 			fmt.Println(err)
-			log.Fatalln("Program Error out")
+			logger.Log.Fatal("Program Error out")
 		}
 	}
 	app.Run(os.Args)
-	log.Println("Program Executed Successfully")
+	logger.Log.Info("Program Executed Successfully")
 
 	// fmt.Println(time.Since(start))
 }

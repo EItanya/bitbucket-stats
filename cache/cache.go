@@ -1,9 +1,9 @@
 package cache
 
 import (
-	"fmt"
-	"log"
-	"strings"
+	"bitbucket/logger"
+
+	"go.uber.org/zap"
 )
 
 // Cache interface for Caches
@@ -18,8 +18,8 @@ type Cache interface {
 func SaveToCache(c Cache, key string, entity CacheEntity) error {
 	err := c.write(key, entity)
 	if err != nil {
-		log.Println("Error while attempting to write to cache")
-		log.Println(err)
+		logger.Log.Info("Error while attempting to write to cache")
+		logger.Log.Info(err)
 	}
 	return err
 }
@@ -27,8 +27,8 @@ func SaveToCache(c Cache, key string, entity CacheEntity) error {
 func ReadFromCache(c Cache, keys []string) ([]CacheEntity, error) {
 	entities, err := c.read(keys)
 	if err != nil {
-		log.Println("Error while attempting to read from cache")
-		log.Println(err)
+		logger.Log.Info("Error while attempting to read from cache")
+		logger.Log.Info(err)
 	}
 	return entities, err
 }
@@ -36,8 +36,8 @@ func ReadFromCache(c Cache, keys []string) ([]CacheEntity, error) {
 func ClearCache(c Cache) error {
 	err := c.clear()
 	if err != nil {
-		log.Println("Error while attempting to clear cache")
-		log.Println(err)
+		logger.Log.Info("Error while attempting to clear cache")
+		logger.Log.Info(err)
 	}
 	return err
 }
@@ -45,8 +45,8 @@ func ClearCache(c Cache) error {
 func CheckCache(c Cache, keyGroup string) (bool, error) {
 	ok, err := c.check(keyGroup)
 	if err != nil {
-		log.Println("Error while attempting to check cache")
-		log.Println(err)
+		logger.Log.Info("Error while attempting to check cache")
+		logger.Log.Info(err)
 	}
 	return ok, err
 }
@@ -65,33 +65,33 @@ type CacheEntity interface {
 }
 
 func MarshalEntity(ce CacheEntity, dat interface{}) error {
+	if ce == nil {
+		logger.Log.Info("Cache Entity is undefined, skipping marshal to cache entity")
+		return nil
+	}
 	err := ce.marshal(dat)
 	if err != nil {
-		errSlice := []string{
-			"Error while attempting to Marshal Cache entity\n",
-			fmt.Sprintf("Error: %s\n", err.Error()),
-			fmt.Sprintf("Entity: %+v\n", ce),
-			fmt.Sprintf("Data: %+v", dat),
-		}
-		log.Println(strings.Join(errSlice, ""))
+		logger.Log.Infow("Error while attempting to Marshal Cache entity",
+			zap.Error(err),
+			zap.Reflect("Entity", ce),
+			zap.Reflect("Data", dat),
+		)
 	}
 	return err
 }
 
 func UnmarshalEntity(ce CacheEntity, dat interface{}) error {
 	if ce == nil {
-		log.Println("Cache Entity is undefined, skipping translation")
+		logger.Log.Info("Cache Entity is undefined, skipping Unmarshal from cache entity")
 		return nil
 	}
 	err := ce.unmarshal(dat)
 	if err != nil {
-		errSlice := []string{
-			"Error while attempting to Marshal Cache entity\n",
-			fmt.Sprintf("Error: %s\n", err.Error()),
-			fmt.Sprintf("Entity: %+v\n", ce),
-			fmt.Sprintf("Data: %+v", dat),
-		}
-		log.Println(strings.Join(errSlice, ""))
+		logger.Log.Infow("Error while attempting to Unmarshal Cache entity",
+			zap.Error(err),
+			zap.Reflect("Entity", ce),
+			zap.Reflect("Data", dat),
+		)
 	}
 	return err
 }

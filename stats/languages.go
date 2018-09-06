@@ -2,9 +2,9 @@ package stats
 
 import (
 	"bitbucket/api"
+	"bitbucket/logger"
 	"bitbucket/models"
 	"fmt"
-	"log"
 	"sync"
 )
 
@@ -23,17 +23,17 @@ type Context struct {
 func (c *Context) Initialize(client *api.Client) error {
 	files, err := client.GetFiles(make(map[string][]string))
 	if err != nil || files == nil {
-		log.Fatalf("Error while trying to retrieve files\n%s\nFiles: %+v", err.Error(), files)
+		logger.Log.Fatalf("Error while trying to retrieve files\n%s\nFiles: %+v", err.Error(), files)
 	}
 	c.files = files
 	repos, err := client.GetRepos(make([]string, 0))
 	if err != nil || repos == nil {
-		log.Fatalf("Error while trying to retrieve repos\n%s\nRepos: %+v", err.Error(), repos)
+		logger.Log.Fatalf("Error while trying to retrieve repos\n%s\nRepos: %+v", err.Error(), repos)
 	}
 	c.repos = repos
 	projects, err := client.GetProjects(make([]string, 0))
 	if err != nil || projects == nil {
-		log.Fatalf("Error while trying to retrieve projects\n%s\nProjects: %+v", err.Error(), projects)
+		logger.Log.Fatalf("Error while trying to retrieve projects\n%s\nProjects: %+v", err.Error(), projects)
 	}
 	c.projects = projects
 	c.TotalFileCount = 0

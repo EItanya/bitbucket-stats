@@ -1,9 +1,9 @@
 package api
 
 import (
+	"bitbucket/logger"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -64,7 +64,7 @@ func (api *API) Get(path string, opts urlOptions) (*http.Response, error) {
 	}
 	req, err := http.NewRequest("GET", link, nil)
 	if err != nil {
-		log.Fatal(err)
+		logger.Log.Fatal(err)
 	}
 	return api.doExt(req)
 }

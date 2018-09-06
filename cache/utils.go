@@ -1,9 +1,9 @@
 package cache
 
 import (
+	"bitbucket/logger"
 	"bitbucket/models"
 	"fmt"
-	"log"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -50,12 +50,12 @@ func (rp *redisRepositoryModel) revertToRepositoryModel(p models.Project) models
 func (r *RedisCache) getValues(redisCommand, key string) ([]interface{}, error) {
 	resp, err := r.Conn.Do(redisCommand, redis.Args{}.Add(key)...)
 	if err != nil {
-		log.Println(err)
+		logger.Log.Info(err)
 		return nil, err
 	}
 	values, err := redis.Values(resp, nil)
 	if err != nil {
-		log.Println(err)
+		logger.Log.Info(err)
 		return nil, err
 	}
 	return values, nil

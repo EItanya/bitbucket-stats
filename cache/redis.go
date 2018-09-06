@@ -1,10 +1,10 @@
 package cache
 
 import (
+	"bitbucket/logger"
 	"bitbucket/models"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/gomodule/redigo/redis"
@@ -95,12 +95,12 @@ func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
 			case "files":
 				resp, err := r.Conn.Do("SMEMBERS", redis.Args{}.Add(key)...)
 				if err != nil {
-					log.Println(err)
+					logger.Log.Info(err)
 					return nil, err
 				}
 				values, err := redis.Values(resp, nil)
 				if err != nil {
-					log.Println(err)
+					logger.Log.Info(err)
 					return nil, err
 				}
 				var dat models.Files
@@ -117,7 +117,7 @@ func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
 			results = append(results, re)
 
 		} else {
-			log.Printf("Key passed to redis cache (%s) not of the correct form.\n", key)
+			logger.Log.Infof("Key passed to redis cache (%s) not of the correct form.\n", key)
 
 		}
 	}
@@ -147,14 +147,14 @@ func (r *RedisCache) initialize() error {
 	var err error
 	if r.Config != nil {
 		if r.Config.Protocol == "" || r.Config.Port == "" {
-			log.Fatalln(errors.New("Redis config is missing information"))
+			logger.Log.Fatal(errors.New("Redis config is missing information"))
 		}
 		conn, err = redis.Dial(r.Config.Protocol, fmt.Sprintf(":%s", r.Config.Port))
 	} else {
 		conn, err = redis.Dial("tcp", ":6379")
 	}
 	if err != nil {
-		log.Println(err)
+		logger.Log.Info(err)
 	}
 	r.Conn = conn
 	return nil

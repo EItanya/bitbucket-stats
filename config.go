@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bitbucket/logger"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 
 	"github.com/urfave/cli"
@@ -30,7 +30,7 @@ func (c *Config) Read(filename string) error {
 }
 
 func beforeAppSetup(c *cli.Context) error {
-	log.Println("Running Setup")
+	logger.Log.Info("Running Setup")
 	config := Config{}
 	config.Read(c.GlobalString(strings.Split(configFlag.Name, ",")[0]))
 	if config.Username != "" && config.Password != "" {
