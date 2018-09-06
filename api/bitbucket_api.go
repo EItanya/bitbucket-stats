@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/gosuri/uiprogress"
 )
 
 // Client basic type of bitbucket api client
@@ -33,6 +35,7 @@ func Initialize(user *UserInfo, url string) (*Client, error) {
 
 // Update retrieves all data and saves
 func (client *Client) Update() error {
+	uiprogress.Start() // start rendering
 	if client.api == nil {
 		return errors.New("Must initialize client before attempting any retrievals")
 	}
@@ -53,6 +56,7 @@ func (client *Client) Update() error {
 	if err != nil {
 		return err
 	}
+	uiprogress.Stop()
 	return nil
 }
 

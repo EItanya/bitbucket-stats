@@ -3,6 +3,8 @@ package api
 import (
 	"fmt"
 	"os"
+
+	"github.com/gosuri/uiprogress"
 )
 
 // SavedRepos is the format by which repos are saved
@@ -49,16 +51,27 @@ func (client *Client) GetRepos(repos []string) (*[]RepoModel, error) {
 		if err != nil {
 			return nil, err
 		}
+		numProjects := len(projectJSON.Values)
+		bar := uiprogress.AddBar(numProjects + 1)
+		bar.AppendCompleted()
+		bar.PrependFunc(func(b *uiprogress.Bar) string {
+			if b.Current() > numProjects {
+				return fmt.Sprintf("Saving repo data:  %s", b.TimeElapsedString())
+			}
+			return fmt.Sprintf("Dowloading repo data:  %s", b.TimeElapsedString())
+		})
 		for _, v := range projectJSON.Values {
 			go client.getReposInternal(v, repoChan)
 		}
 		for range projectJSON.Values {
 			reposJSON = append(reposJSON, <-repoChan...)
+			bar.Incr()
 		}
 		err = writeJSONToFile(&reposJSON, reposFilePath)
 		if err != nil {
 			return nil, err
 		}
+		bar.Incr()
 	} else {
 		err := readJSONFromFile(reposFilePath, &reposJSON)
 		if err != nil {

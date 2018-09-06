@@ -65,9 +65,6 @@ func statsReposAction(c *cli.Context) error {
 		table := &stats.Table{}
 		table.CreateBasicFileTable(val.Stats.Data, val.Stats.Total)
 		fmt.Println(table.Table.String())
-		// for lang, total := range val.Stats.Data {
-		// 	fmt.Printf("  %s: %d/%d (%.2f%%)\n", lang, total, val.Stats.Total, (float64(total)/float64(val.Stats.Total))*100)
-		// }
 	}
 	return nil
 }

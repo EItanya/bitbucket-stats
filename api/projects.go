@@ -3,6 +3,8 @@ package api
 import (
 	"fmt"
 	"os"
+
+	"github.com/gosuri/uiprogress"
 )
 
 // SavedProjects is the format by which projects are saved
@@ -53,10 +55,19 @@ const projectsFilePath = "data/projects.json"
 func (client *Client) GetProjects(projects []string) (*[]ProjectModel, error) {
 	var projectJSON SavedProjects
 	if _, err := os.Stat(projectsFilePath); os.IsNotExist(err) {
+		bar := uiprogress.AddBar(2)
+		bar.AppendCompleted()
+		bar.PrependFunc(func(b *uiprogress.Bar) string {
+			if b.Current() > 1 {
+				return fmt.Sprintf("Saving project data:  %s", b.TimeElapsedString())
+			}
+			return fmt.Sprintf("Dowloading project data:  %s", b.TimeElapsedString())
+		})
 		resp, err := client.api.Get(projectsURLPath, 250)
 		if err != nil {
 			return nil, err
 		}
+		bar.Incr()
 		err = readJSONFromResp(resp, &projectJSON)
 		if err != nil {
 			return nil, err
@@ -65,6 +76,7 @@ func (client *Client) GetProjects(projects []string) (*[]ProjectModel, error) {
 		if err != nil {
 			return nil, err
 		}
+		bar.Incr()
 	} else {
 		err := readJSONFromFile(projectsFilePath, &projectJSON)
 		if err != nil {

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/gosuri/uiprogress"
 )
 
 // SavedFiles is the format by which files are saved
@@ -25,10 +27,19 @@ func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 		if err != nil {
 			return nil, err
 		}
-		for i := 0; i < len(reposJSON); i += batchNumber {
+		numRepos := len(reposJSON)
+		bar := uiprogress.AddBar(numRepos + 1)
+		bar.AppendCompleted()
+		bar.PrependFunc(func(b *uiprogress.Bar) string {
+			if b.Current() > numRepos {
+				return fmt.Sprintf("Saving file data:  %s", b.TimeElapsedString())
+			}
+			return fmt.Sprintf("Dowloading file data:  %s", b.TimeElapsedString())
+		})
+		for i := 0; i < numRepos; i += batchNumber {
 			var r []RepoModel
-			if i+batchNumber > len(reposJSON) {
-				r = reposJSON[i:len(reposJSON)]
+			if i+batchNumber > numRepos {
+				r = reposJSON[i:numRepos]
 			} else {
 				r = reposJSON[i : i+batchNumber]
 			}
@@ -36,6 +47,7 @@ func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 		}
 		for range reposJSON {
 			keyedFileList := <-fileChan
+			bar.Incr()
 			for projectKey, value := range keyedFileList {
 				project, repoExists := allFilesJSON[projectKey]
 				if repoExists {
@@ -52,6 +64,7 @@ func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 		if err != nil {
 			return nil, err
 		}
+		bar.Incr()
 	} else {
 		err := readJSONFromFile(filesFilePath, &allFilesJSON)
 		if err != nil {
