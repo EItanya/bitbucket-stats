@@ -54,16 +54,26 @@ const projectsFilePath = "data/projects.json"
 // GetProjects get all projects from Bitbucket
 func (client *Client) GetProjects(projects []string) (*[]ProjectModel, error) {
 	var projectJSON SavedProjects
+	// projectJSON := &ProjectResponse{}
 	if _, err := os.Stat(projectsFilePath); os.IsNotExist(err) {
 		bar := uiprogress.AddBar(2)
 		bar.AppendCompleted()
-		bar.PrependFunc(func(b *uiprogress.Bar) string {
-			if b.Current() > 1 {
-				return fmt.Sprintf("Saving project data:  %s", b.TimeElapsedString())
+		bar.PrependFunc(prependFormatFunc(func(b *uiprogress.Bar) string {
+			if b.Current() == b.Total {
+				return "Project data retrieved"
+			} else if b.Current() >= 1 {
+				return "Saving project data"
 			}
-			return fmt.Sprintf("Dowloading project data:  %s", b.TimeElapsedString())
-		})
-		resp, err := client.api.Get(projectsURLPath, 250)
+			return "Dowloading project data"
+		}))
+		opts := urlOptions{
+			limit: 250,
+		}
+		resp, err := client.api.Get(projectsURLPath, opts)
+
+		projectJSON := &ProjectResponse{}
+		// GetEntity(resp, projectJSON)
+
 		if err != nil {
 			return nil, err
 		}

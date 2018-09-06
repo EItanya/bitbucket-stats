@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 // API basis for API class
@@ -43,9 +44,24 @@ func (api *API) doExt(req *http.Request) (*http.Response, error) {
 	}
 }
 
+type urlOptions struct {
+	limit int
+	start int
+}
+
 // Get wrapper for http GET
-func (api *API) Get(path string, limit int) (*http.Response, error) {
-	link := fmt.Sprintf("%s%s?limit=%d", api.BaseURL, path, limit)
+func (api *API) Get(path string, opts urlOptions) (*http.Response, error) {
+	link := fmt.Sprintf("%s%s", api.BaseURL, path)
+	options := make([]string, 0)
+	if opts.limit != 0 {
+		options = append(options, fmt.Sprintf("limit=%d", opts.limit))
+	}
+	if opts.start != 0 {
+		options = append(options, fmt.Sprintf("start=%d", opts.start))
+	}
+	if len(options) > 0 {
+		link = fmt.Sprintf("%s?%s", link, strings.Join(options, "&"))
+	}
 	req, err := http.NewRequest("GET", link, nil)
 	if err != nil {
 		log.Fatal(err)

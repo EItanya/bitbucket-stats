@@ -25,7 +25,8 @@ func mainAction(c *cli.Context) error {
 }
 
 func updateAction(c *cli.Context) error {
-	return client.Update()
+	// return client.Update()
+	return nil
 }
 
 func getAllAction(c *cli.Context) error {
@@ -144,7 +145,8 @@ func checkUserBeforeAction(c *cli.Context) error {
 		Username: splitUsername[0],
 		Password: splitUsername[1],
 	}
-	client, err = api.Initialize(&user, url)
+	forceReset := c.Command.Name == "update"
+	client, err = api.Initialize(&user, url, forceReset)
 	if err != nil {
 		return err
 	}

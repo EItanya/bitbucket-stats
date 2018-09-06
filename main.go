@@ -13,6 +13,7 @@ func init() {
 
 func main() {
 	// start := time.Now()
+
 	app := cli.NewApp()
 	app.Before = beforeAppSetup
 	app.Flags = cliFlags
@@ -21,7 +22,7 @@ func main() {
 	app.Name = "Bitbucket Stats"
 	app.Usage = "Gather bitbucket stats"
 	app.Action = mainAction
-	app.OnUsageError = onUsageError
+	// app.OnUsageError = onUsageError
 	app.ExitErrHandler = func(c *cli.Context, err error) {
 		if err != nil {
 			log.Fatalln(err)

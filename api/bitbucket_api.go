@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -19,31 +20,21 @@ func (client *Client) checkUser() error {
 	return nil
 }
 
-// Initialize sets up bitbucket API
-func Initialize(user *UserInfo, url string) (*Client, error) {
-	if user != nil {
-		return setupClient(user, url)
-	} else if len(os.Args) > 1 {
-		user, err := translateArgs()
-		if err != nil {
-			return nil, err
-		}
-		return setupClient(user, url)
-	}
-	return setupClient(nil, url)
-}
-
 // Update retrieves all data and saves
 func (client *Client) Update() error {
 	uiprogress.Start() // start rendering
 	if client.api == nil {
 		return errors.New("Must initialize client before attempting any retrievals")
 	}
+	log.Println("Clearing data cache")
 	err := removeAllLocalData()
+	log.Println("Data cache cleared successfully, Beginning download")
+	fmt.Println("Downloading data to cache")
 	if err != nil && !strings.Contains(err.Error(), "no such file or directory") {
 		fmt.Println(err.Error())
 		return err
 	}
+
 	_, err = client.GetProjects(make([]string, 0))
 	if err != nil {
 		return err
@@ -60,7 +51,7 @@ func (client *Client) Update() error {
 	return nil
 }
 
-func setupClient(user *UserInfo, url string) (*Client, error) {
+func Initialize(user *UserInfo, url string, forceReset bool) (*Client, error) {
 	if user.Username != "" && user.Password != "" {
 		api := &API{
 			BaseURL: url,
@@ -74,7 +65,14 @@ func setupClient(user *UserInfo, url string) (*Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		client.checkLocalFiles()
+		if forceReset {
+			err = client.Update()
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			client.checkLocalFiles()
+		}
 
 		// api.Timeout = 15 * time.Second
 		return client, nil

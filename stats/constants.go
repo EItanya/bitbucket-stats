@@ -14,7 +14,7 @@ const perl = "Perl"
 const python = "Python"
 const csharp = "C#"
 const swift = "Swift"
-const c = "C"
+const c = "C/Objective-C"
 const cpp = "C++"
 const java = "Java"
 const groovy = "Groovy"
@@ -109,3 +109,8 @@ var extensionMap = map[string]string{
 	"cql":        cassandra,
 	"exe":        executable,
 }
+
+const javaProject = "JAVA Project"
+const iosProject = "iOS Project"
+const androidProject = "Android Project"
+const jsProject = "JS Project"

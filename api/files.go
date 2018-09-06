@@ -30,12 +30,15 @@ func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 		numRepos := len(reposJSON)
 		bar := uiprogress.AddBar(numRepos + 1)
 		bar.AppendCompleted()
-		bar.PrependFunc(func(b *uiprogress.Bar) string {
-			if b.Current() > numRepos {
-				return fmt.Sprintf("Saving file data:  %s", b.TimeElapsedString())
+		bar.PrependFunc(prependFormatFunc(func(b *uiprogress.Bar) string {
+
+			if b.Current() == b.Total {
+				return "File data retrieved"
+			} else if b.Current() >= numRepos {
+				return "Saving file data"
 			}
-			return fmt.Sprintf("Dowloading file data:  %s", b.TimeElapsedString())
-		})
+			return "Dowloading file data"
+		}))
 		for i := 0; i < numRepos; i += batchNumber {
 			var r []RepoModel
 			if i+batchNumber > numRepos {
@@ -77,18 +80,34 @@ func (client *Client) GetFiles(repos map[string][]string) (*SavedFiles, error) {
 
 func (client *Client) getFilesInternal(r []RepoModel, c chan SavedFiles) {
 	for _, v3 := range r {
-		var filesJSON FileResponse
-		resp, err := client.api.Get(filesURLPath(v3.Project.Key, v3.Slug), 1000)
-		if err != nil {
-			log.Fatal(err)
+		var collector FileResponse
+		nextPageStart := 0
+		for {
+			var filesJSON FileResponse
+			opts := urlOptions{
+				limit: 1000,
+			}
+			if nextPageStart > 0 {
+				opts.start = nextPageStart
+			}
+			resp, err := client.api.Get(filesURLPath(v3.Project.Key, v3.Slug), opts)
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = readJSONFromResp(resp, &filesJSON)
+			if err != nil {
+				log.Fatal(err)
+			}
+			collector.Values = append(collector.Values, filesJSON.Values...)
+			if filesJSON.IsLastPage {
+				break
+			}
+			nextPageStart = filesJSON.NextPageStart
 		}
-		err = readJSONFromResp(resp, &filesJSON)
-		if err != nil {
-			log.Fatal(err)
-		}
+
 		repoFiles := SavedFiles{
 			v3.Project.Key: {
-				v3.Slug: filesJSON,
+				v3.Slug: collector,
 			},
 		}
 		c <- repoFiles

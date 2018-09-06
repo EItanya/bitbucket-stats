@@ -1,5 +1,12 @@
 package api
 
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+)
+
 // --------------------------------------
 //
 //  Bitbucket response API types
@@ -22,6 +29,15 @@ type ProjectResponse struct {
 	Response
 }
 
+func (p *ProjectResponse) UnmarshalHTTP(resp *http.Response) error {
+	byt, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(byt, p)
+	return err
+}
+
 // ProjectModel JSON form of single project
 type ProjectModel struct {
 	Key         string `json:"key"`
@@ -36,6 +52,16 @@ type ProjectModel struct {
 type RepoResponse struct {
 	Values []RepoModel `json:"values"`
 	Response
+}
+
+func (r *RepoResponse) UnmarshalHTTP(resp *http.Response) error {
+	byt, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(byt, r)
+	fmt.Println(r)
+	return err
 }
 
 // RepoModel JSON form of single project
@@ -68,6 +94,16 @@ type Link struct {
 type FileResponse struct {
 	Values []string `json:"values"`
 	Response
+}
+
+func (f *FileResponse) UnmarshalHTTP(resp *http.Response) error {
+	byt, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(byt, f)
+	fmt.Println(f)
+	return err
 }
 
 // ErrorResponse main JSON Error Response

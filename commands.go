@@ -9,9 +9,6 @@ var getCommand = cli.Command{
 	Aliases:     []string{"do"},
 	Usage:       "bitbucket get",
 	Description: "Gets raw data for bitbucket at supplied instance",
-	// Flags: []cli.Flag{
-	// 	userFlag,
-	// },
 }
 
 // var statsCommandFlags = []cli.Flag{
@@ -71,7 +68,6 @@ var statsCommand = cli.Command{
 			Action:      statsNodeModulesAction,
 		},
 	},
-	OnUsageError: onUsageError,
 }
 
 var updateCommand = cli.Command{
@@ -79,14 +75,9 @@ var updateCommand = cli.Command{
 	Aliases:     []string{"sync", "reload"},
 	Usage:       "bitbucket update",
 	Description: "Sync/Updates remote data",
-	// Flags: []cli.Flag{
-	// 	userFlag,
-	// 	urlFLag,
-	// },
-	Action:       updateAction,
-	Before:       checkUserBeforeAction,
-	After:        afterCommandAction,
-	OnUsageError: onUsageError,
+	Action:      updateAction,
+	Before:      checkUserBeforeAction,
+	After:       afterCommandAction,
 }
 
 var guiCommand = cli.Command{
@@ -95,13 +86,8 @@ var guiCommand = cli.Command{
 	Usage:       "bitbucket gui",
 	Description: "Starts the interactive prompt",
 	Action:      guiAction,
-	// Flags: []cli.Flag{
-	// 	userFlag,
-	// 	urlFLag,
-	// },
-	Before:       checkUserBeforeAction,
-	After:        afterCommandAction,
-	OnUsageError: onUsageError,
+	Before:      checkUserBeforeAction,
+	After:       afterCommandAction,
 }
 
 var cliCommands = []cli.Command{

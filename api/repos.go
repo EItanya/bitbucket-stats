@@ -54,12 +54,14 @@ func (client *Client) GetRepos(repos []string) (*[]RepoModel, error) {
 		numProjects := len(projectJSON.Values)
 		bar := uiprogress.AddBar(numProjects + 1)
 		bar.AppendCompleted()
-		bar.PrependFunc(func(b *uiprogress.Bar) string {
-			if b.Current() > numProjects {
-				return fmt.Sprintf("Saving repo data:  %s", b.TimeElapsedString())
+		bar.PrependFunc(prependFormatFunc(func(b *uiprogress.Bar) string {
+			if b.Current() == b.Total {
+				return "Repo data retrieved"
+			} else if b.Current() >= numProjects {
+				return "Saving repo data"
 			}
-			return fmt.Sprintf("Dowloading repo data:  %s", b.TimeElapsedString())
-		})
+			return "Dowloading repo data"
+		}))
 		for _, v := range projectJSON.Values {
 			go client.getReposInternal(v, repoChan)
 		}
@@ -84,7 +86,10 @@ func (client *Client) GetRepos(repos []string) (*[]RepoModel, error) {
 
 func (client *Client) getReposInternal(v ProjectModel, c chan []RepoModel) {
 	var repoJSON RepoResponse
-	resp, _ := client.api.Get(reposURLPath(v.Key), 250)
+	opts := urlOptions{
+		limit: 500,
+	}
+	resp, _ := client.api.Get(reposURLPath(v.Key), opts)
 	_ = readJSONFromResp(resp, &repoJSON)
 	c <- repoJSON.Values
 }
