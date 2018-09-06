@@ -16,13 +16,15 @@ func (l *languageMap) ToJSON() (string, error) {
 }
 
 type languageData struct {
-	data languageMap
+	data  languageMap
+	total int
 	sync.WaitGroup
 	sync.Mutex
 }
 
 func (counter *languageData) countFiles(files []string) {
 	defer counter.Done()
+	counter.total += len(files)
 	for _, val := range files {
 		fileType, validFileType := getFiletype(val)
 		counter.Lock()
