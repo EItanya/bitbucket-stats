@@ -1,12 +1,14 @@
 package cache
 
 import (
+	"bitbucket/models"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"reflect"
+	"os"
 	"sync"
+	"time"
 )
 
 var projectsCacheTable *fileCacheMap
@@ -18,12 +20,42 @@ var fileCacheMaps []*fileCacheMap
 func init() {
 	projectsCacheTable = new(fileCacheMap)
 	projectsCacheTable.initialize(defaultDir, projectConst)
+	projectsCacheTable.unmarshalEntity = func(c CacheEntity) (interface{}, error) {
+		dat := models.Project{}
+		err := c.Unmarshal(&dat)
+		return dat, err
+	}
+	projectsCacheTable.marshalEntity = func(dat interface{}) (CacheEntity, error) {
+		result := &models.Project{}
+		err := result.Marshal(dat)
+		return result, err
+	}
 
 	repositoriesCacheTable = new(fileCacheMap)
 	repositoriesCacheTable.initialize(defaultDir, repositoryConst)
+	repositoriesCacheTable.unmarshalEntity = func(c CacheEntity) (interface{}, error) {
+		dat := models.Repository{}
+		err := c.Unmarshal(&dat)
+		return dat, err
+	}
+	repositoriesCacheTable.marshalEntity = func(dat interface{}) (CacheEntity, error) {
+		result := &models.Repository{}
+		err := result.Marshal(dat)
+		return result, err
+	}
 
 	filesCacheTable = new(fileCacheMap)
 	filesCacheTable.initialize(defaultDir, filesConst)
+	filesCacheTable.unmarshalEntity = func(c CacheEntity) (interface{}, error) {
+		dat := models.Files{}
+		err := c.Unmarshal(&dat)
+		return dat, err
+	}
+	filesCacheTable.marshalEntity = func(dat interface{}) (CacheEntity, error) {
+		result := &models.Files{}
+		err := result.Marshal(dat)
+		return result, err
+	}
 
 	fileCacheMaps = []*fileCacheMap{
 		projectsCacheTable,
@@ -44,19 +76,23 @@ func (t *fileCacheMap) initialize(dir, name string) {
 
 type fileCacheMap struct {
 	*fileCacheTableBasic
-	data fileCacheMapData
+	data            fileCacheMapData
+	marshalEntity   func(interface{}) (CacheEntity, error)
+	unmarshalEntity func(CacheEntity) (interface{}, error)
 }
 type fileCacheMapData map[fileCacheKey]interface{}
 
-func (t *fileCacheMap) write(data interface{}) error {
+func (t *fileCacheMap) write() error {
 	if t.filename == "" {
 		return errors.New("Filename of Cache Table cannot be null")
 	}
-	if data == nil {
+	if t.data == nil {
 		return errors.New("Data object to be written cannot be null")
 	}
 	t.fileMtx.Lock()
-	byt, err := json.MarshalIndent(&data, "", "  ")
+	dataToWrite := make(writtenCacheMapData, 0)
+	dataToWrite.prepareDataForWrite(t.data)
+	byt, err := json.MarshalIndent(dataToWrite, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -68,41 +104,49 @@ func (t *fileCacheMap) write(data interface{}) error {
 	return nil
 }
 
-func (t *fileCacheMap) read(data interface{}) error {
+func (t *fileCacheMap) read() error {
 	if t.filename == "" {
 		return errors.New("Filename of Cache Table cannot be null")
 	}
-	if data == nil {
-		return errors.New("Data object to be read into cannot be null")
+	if info, err := os.Stat(t.filename); err == nil {
+		if time.Since(t.lastSync) > time.Since(info.ModTime()) {
+			t.fileMtx.RLock()
+			byt, err := ioutil.ReadFile(t.filename)
+			if err != nil {
+				return err
+			}
+			var readData writtenCacheMapData
+			err = json.Unmarshal(byt, &readData)
+			t.data = readData.translateDataFromRead()
+			if err != nil {
+				return err
+			}
+			t.fileMtx.RUnlock()
+		}
+		return nil
 	}
-	if reflect.ValueOf(data).Kind() != reflect.Ptr {
-		return errors.New("Data object to be read into must be a pointer")
-	}
-	t.fileMtx.RLock()
-	byt, err := ioutil.ReadFile(t.filename)
+	return fmt.Errorf("File (%s) could not be found for the (%s) file cache table", t.filename, t.title)
+}
+
+func (t *fileCacheMap) get(key fileCacheKey) (CacheEntity, error) {
+	t.dataMtx.RLock()
+	data, err := t.marshalEntity(t.data[key])
+	t.dataMtx.RUnlock()
+	return data, err
+}
+
+func (t *fileCacheMap) set(key fileCacheKey, dataToSave CacheEntity) error {
+	t.dataMtx.Lock()
+	data, err := t.unmarshalEntity(dataToSave)
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(byt, data)
-	if err != nil {
-		return err
-	}
-	t.fileMtx.RUnlock()
+	t.data[key] = data
+	t.dataMtx.Unlock()
 	return nil
 }
 
-func (t *fileCacheMap) get(key fileCacheKey) (interface{}, error) {
-	var data interface{}
-	t.dataMtx.RLock()
-	data = t.data[key]
-	t.dataMtx.RUnlock()
-	return data, nil
-}
-
-func (t *fileCacheMap) set(key fileCacheKey, dataToSave interface{}) error {
-	t.dataMtx.Lock()
-	t.data[key] = dataToSave
-	t.dataMtx.Unlock()
+func (t *fileCacheMap) clear() error {
 	return nil
 }
 
@@ -114,4 +158,29 @@ func (t *fileCacheMap) keys() []string {
 		}
 	}
 	return keys
+}
+
+type writtenCacheMapData []struct {
+	Key   fileCacheKey `json:"key"`
+	Value interface{}  `json:"value"`
+}
+
+func (t *writtenCacheMapData) prepareDataForWrite(data fileCacheMapData) {
+	for key, value := range data {
+		*t = append(*t, struct {
+			Key   fileCacheKey `json:"key"`
+			Value interface{}  `json:"value"`
+		}{
+			Key:   key,
+			Value: value,
+		})
+	}
+}
+
+func (t *writtenCacheMapData) translateDataFromRead() fileCacheMapData {
+	result := make(fileCacheMapData)
+	for _, val := range *t {
+		result[val.Key] = val.Value
+	}
+	return result
 }

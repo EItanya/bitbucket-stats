@@ -147,7 +147,7 @@ func setupClientAction(c *cli.Context) error {
 		Password: splitUsername[1],
 	}
 	forceReset := c.Command.Name == "update"
-	redisCache, err := cache.NewRedisCache(nil)
+	redisCache, err := cache.NewFileCache(nil)
 	if err != nil {
 		logger.Log.Fatal("Unable to establish connection to cache")
 		return err

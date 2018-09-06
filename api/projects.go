@@ -55,7 +55,7 @@ func (client *Client) GetProjects(projects []string) (*[]models.Project, error) 
 
 		for _, v := range jsonResp.Values {
 			key := fmt.Sprintf("project:%s", v.Key)
-			err = cache.SaveToCache(client.cache, key, &v)
+			err = cache.SetCacheValue(client.cache, key, &v)
 			if err != nil {
 				return nil, err
 			}
@@ -64,7 +64,7 @@ func (client *Client) GetProjects(projects []string) (*[]models.Project, error) 
 		results := models.FilterProjects(&jsonResp.Values, projects)
 		return &results, nil
 	} else if present && err == nil {
-		entities, err := cache.ReadFromCache(client.cache, []string{cache.AllProjectConst})
+		entities, err := cache.GetCacheValue(client.cache, []string{cache.AllProjectConst})
 		if err != nil {
 			return nil, err
 		}

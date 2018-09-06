@@ -48,7 +48,7 @@ func (client *Client) GetRepos(repos []string) (*[]models.Repository, error) {
 
 		for _, v := range reposJSON {
 			key := fmt.Sprintf("repository:%s", v.Slug)
-			err = cache.SaveToCache(client.cache, key, &v)
+			err = cache.SetCacheValue(client.cache, key, &v)
 			if err != nil {
 				return nil, err
 			}
@@ -57,7 +57,7 @@ func (client *Client) GetRepos(repos []string) (*[]models.Repository, error) {
 		result := models.FilterRepos(&reposJSON, repos)
 		return &result, nil
 	} else if present && err == nil {
-		entities, err := cache.ReadFromCache(client.cache, []string{cache.AllRepositoryConst})
+		entities, err := cache.GetCacheValue(client.cache, []string{cache.AllRepositoryConst})
 		if err != nil {
 			return nil, err
 		}

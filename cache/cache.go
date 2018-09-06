@@ -18,15 +18,15 @@ const AllFilesConst = "all_" + filesConst
 
 // Cache interface for Caches
 type Cache interface {
-	write(key string, entity CacheEntity) error
-	read(keys []string) ([]CacheEntity, error)
+	set(key string, entity CacheEntity) error
+	get(keys []string) ([]CacheEntity, error)
 	check(keyGroup string) (bool, error)
 	clear() error
 	initialize() error
 }
 
-func SaveToCache(c Cache, key string, entity CacheEntity) error {
-	err := c.write(key, entity)
+func SetCacheValue(c Cache, key string, entity CacheEntity) error {
+	err := c.set(key, entity)
 	if err != nil {
 		logger.Log.Errorw(
 			"Error while attempting to write to cache",
@@ -36,8 +36,8 @@ func SaveToCache(c Cache, key string, entity CacheEntity) error {
 	return err
 }
 
-func ReadFromCache(c Cache, keys []string) ([]CacheEntity, error) {
-	entities, err := c.read(keys)
+func GetCacheValue(c Cache, keys []string) ([]CacheEntity, error) {
+	entities, err := c.get(keys)
 	if err != nil {
 		logger.Log.Errorw(
 			"Error while attempting to read from cache",

@@ -27,23 +27,19 @@ type RedisCacheConfig struct {
 	Protocol string
 }
 
-func (r *RedisCache) write(key string, entity CacheEntity) error {
-	var data interface{}
-	err := entity.Unmarshal(&data)
-	if err != nil {
-		return err
-	}
-	switch typedData := data.(type) {
-	case models.Files:
-		if len(typedData) == 0 {
+func (r *RedisCache) set(key string, entity CacheEntity) error {
+	var err error
+	switch typedData := entity.(type) {
+	case *models.Files:
+		if len(*typedData) == 0 {
 			return nil
 		}
-		_, err = r.Conn.Do("SADD", redis.Args{}.Add(key).AddFlat(typedData)...)
-	case models.Project:
-		_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(typedData)...)
-	case models.Repository:
+		_, err = r.Conn.Do("SADD", redis.Args{}.Add(key).AddFlat(*typedData)...)
+	case *models.Project:
+		_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(*typedData)...)
+	case *models.Repository:
 		rrm := redisRepositoryModel{}
-		rrm.initializeRedisRepoModel(typedData)
+		rrm.initializeRedisRepoModel(*typedData)
 		_, err = r.Conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(rrm)...)
 	default:
 		return errors.New("Redis does not support saving of data type passed in")
@@ -54,7 +50,7 @@ func (r *RedisCache) write(key string, entity CacheEntity) error {
 	return nil
 }
 
-func (r *RedisCache) read(keys []string) ([]CacheEntity, error) {
+func (r *RedisCache) get(keys []string) ([]CacheEntity, error) {
 	if len(keys) == 1 {
 		key := keys[0]
 		if key == AllProjectConst || key == AllRepositoryConst || key == AllFilesConst {

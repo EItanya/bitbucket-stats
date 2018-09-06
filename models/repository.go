@@ -34,10 +34,6 @@ type Link struct {
 }
 
 func (r *Repository) Unmarshal(dat interface{}) error {
-	if cast, ok := dat.(*interface{}); ok {
-		*cast = *r
-		return nil
-	}
 	if cast, ok := dat.(*Repository); ok {
 		*cast = *r
 		return nil
@@ -48,7 +44,7 @@ func (r *Repository) Unmarshal(dat interface{}) error {
 func (r *Repository) Marshal(dat interface{}) error {
 	switch typedData := dat.(type) {
 	case Repository:
-		r = &typedData
+		*r = typedData
 	default:
 		return fmt.Errorf("Improper type (%s) was passed into marshal method for Repository model", dat)
 	}

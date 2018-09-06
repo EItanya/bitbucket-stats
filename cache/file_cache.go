@@ -23,12 +23,7 @@ type FileCacheConfig struct {
 	Dir string
 }
 
-func (c *FileCache) write(key string, entity CacheEntity) error {
-	var data interface{}
-	err := entity.Unmarshal(&data)
-	if err != nil {
-		return err
-	}
+func (c *FileCache) set(key string, entity CacheEntity) error {
 
 	cacheKey, err := c.translateCacheKey(key)
 	if err != nil {
@@ -40,7 +35,12 @@ func (c *FileCache) write(key string, entity CacheEntity) error {
 		return err
 	}
 
-	err = fileCacheSet(cacheTable, cacheKey, data)
+	err = fileCacheSet(cacheTable, cacheKey, entity)
+	if err != nil {
+		return err
+	}
+
+	err = cacheTable.write()
 	if err != nil {
 		return err
 	}
@@ -48,11 +48,12 @@ func (c *FileCache) write(key string, entity CacheEntity) error {
 	return nil
 }
 
-func (c *FileCache) read(keys []string) ([]CacheEntity, error) {
+func (c *FileCache) get(keys []string) ([]CacheEntity, error) {
+
 	if len(keys) == 1 {
 		key := keys[0]
 		if key == AllProjectConst || key == AllRepositoryConst || key == AllFilesConst {
-			keys = c.getAllKeysForTable(strings.Split(key, "_")[0])
+			keys = c.getAllKeysForTable(strings.Split(key, "_")[1])
 		}
 	}
 
@@ -72,15 +73,14 @@ func (c *FileCache) read(keys []string) ([]CacheEntity, error) {
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, &FileEntity{
-			RawData: data,
-		})
+		results = append(results, data)
 	}
 	return results, nil
 }
 
 func (c *FileCache) check(keyGroup string) (bool, error) {
-	if _, err := ioutil.ReadFile(fmt.Sprintf("%s/%s.json", c.Config.Dir, keyGroup)); os.IsNotExist(err) {
+	filename := fmt.Sprintf("%s/%s.json", c.Config.Dir, strings.Split(keyGroup, "_")[1])
+	if _, err := ioutil.ReadFile(filename); os.IsNotExist(err) {
 		return false, nil
 	} else if err != nil {
 		return false, err

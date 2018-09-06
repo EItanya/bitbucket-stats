@@ -21,10 +21,6 @@ type Project struct {
 }
 
 func (p *Project) Unmarshal(dat interface{}) error {
-	if cast, ok := dat.(*interface{}); ok {
-		*cast = *p
-		return nil
-	}
 	if cast, ok := dat.(*Project); ok {
 		*cast = *p
 		return nil
@@ -35,7 +31,7 @@ func (p *Project) Unmarshal(dat interface{}) error {
 func (p *Project) Marshal(dat interface{}) error {
 	switch typedData := dat.(type) {
 	case Project:
-		p = &typedData
+		*p = typedData
 	default:
 		return fmt.Errorf("Improper type (%s) was passed into marshal method for Project model", dat)
 	}

@@ -54,7 +54,7 @@ func (client *Client) GetFiles(repos map[string][]string) (*[]models.FilesID, er
 				continue
 			}
 			key := fmt.Sprintf("files:%s:%s", fileList.ProjectKey, fileList.RepoSlug)
-			err = cache.SaveToCache(client.cache, key, &fileList.Files)
+			err = cache.SetCacheValue(client.cache, key, &fileList.Files)
 			if err != nil {
 				return nil, err
 			}
@@ -63,7 +63,7 @@ func (client *Client) GetFiles(repos map[string][]string) (*[]models.FilesID, er
 		bar.Incr()
 		return &fileListResults, nil
 	} else if present && err == nil {
-		entities, err := cache.ReadFromCache(client.cache, []string{cache.AllFilesConst})
+		entities, err := cache.GetCacheValue(client.cache, []string{cache.AllFilesConst})
 		if err != nil {
 			return nil, err
 		}
