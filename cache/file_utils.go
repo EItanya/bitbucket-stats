@@ -4,6 +4,7 @@ import (
 	"bitbucket-stats/logger"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -17,14 +18,14 @@ func removeAllLocalData(dirname string) error {
 		if err != nil {
 			return err
 		}
-		err = deleteFiles(fileInfo)
+		err = deleteFiles(fileInfo, dirname)
 		if err != nil {
 			return err
 		}
 	} else if err != nil {
 		return err
 	} else {
-		err = deleteFiles(fileInfo)
+		err = deleteFiles(fileInfo, dirname)
 		if err != nil {
 			return err
 		}
@@ -33,13 +34,13 @@ func removeAllLocalData(dirname string) error {
 	return nil
 }
 
-func deleteFiles(fileInfo []os.FileInfo) error {
+func deleteFiles(fileInfo []os.FileInfo, dirname string) error {
 	for _, item := range fileInfo {
 		var deleteErr error
 		if item.IsDir() {
-			deleteErr = os.Remove(item.Name())
+			deleteErr = os.RemoveAll(fmt.Sprintf("%s/%s", dirname, item.Name()))
 		} else {
-			deleteErr = os.Remove(item.Name())
+			deleteErr = os.Remove(fmt.Sprintf("%s/%s", dirname, item.Name()))
 		}
 		if deleteErr != nil {
 			return deleteErr

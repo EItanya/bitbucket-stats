@@ -152,14 +152,17 @@ func (t *fileCacheMap) set(key fileCacheKey, dataToSave CacheEntity) error {
 }
 
 func (t *fileCacheMap) clear() error {
-	return nil
+	return os.Remove(t.filename)
 }
 
 func (t *fileCacheMap) keys() []string {
-	keys := make([]string, 0)
+	var keys []string
 	if t.data != nil {
+		keys = make([]string, len(t.data))
+		i := 0
 		for key := range t.data {
-			keys = append(keys, fmt.Sprintf("%s:%s", key.Location, key.Key))
+			keys[i] = fmt.Sprintf("%s:%s", key.Location, key.Key)
+			i++
 		}
 	}
 	return keys
